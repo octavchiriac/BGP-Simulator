@@ -1,0 +1,59 @@
+{
+	"routers": [
+		{
+			"name" : "R1",
+			"interfaces": [
+				{
+					"name" : "fa0/1",
+					"ipAddress" : "10.0.0.1",
+					"subnetMask" : "255.255.255.0"
+				},
+				{
+					"name" : "fa0/2",
+					"ipAddress" : "10.0.0.2",
+					"subnetMask" : "255.255.255.0"
+				},
+			]
+		},
+		{
+			"name" : "R2",
+			"interfaces": [
+				{
+					"name" : "fa0/1",
+					"ipAddress" : "10.1.0.1",
+					"subnetMask" : "255.0.0.0"
+				},
+				{
+					"name" : "fa0/2",
+					"ipAddress" : "10.1.0.2",
+					"subnetMask" : "255.0.0.0"
+				},
+				{
+					"name" : "fa0/3",
+					"ipAddress" : "10.1.0.3",
+					"subnetMask" : "255.0.0.0"
+				},
+			]
+		},
+		{
+			"name" : "R3",
+			"interfaces": [
+				{
+					"name" : "fa0/1",
+					"ipAddress" : "100.1.2.1",
+					"subnetMask" : "255.255.0.0"
+				},
+				{
+					"name" : "fa0/2",
+					"ipAddress" : "100.1.2.2",
+					"subnetMask" : "255.255.0.0"
+				},
+				{
+					"name" : "fa0/3",
+					"ipAddress" : "100.1.2.3",
+					"subnetMask" : "255.255.0.0"
+				},
+			]
+		},
+	]
+}
