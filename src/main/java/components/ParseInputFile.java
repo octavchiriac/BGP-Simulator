@@ -39,6 +39,7 @@ public class ParseInputFile {
 			routers.add(router);
 			
 			router.printRouterInfo();
+			
 		}		
 	}
 
