@@ -49,12 +49,14 @@ public class Router {
 	public void printRouterInfo() {
 		System.out.println(this.getName());
 		for(RouterInterface inte : this.getInterfaces()) {
-			System.out.println(inte.getName());
-			System.out.println(inte.getIpAddress());
-			System.out.println(inte.getSubnetMask());
+			System.out.println("Interface Name: " + inte.getName());
+			System.out.println("IpAddress: " + inte.getIpAddress());
+			System.out.println("Mask: " + inte.getSubnetMask());
+			System.out.println("AS: " + inte.getAs());
+			System.out.println("Direct link: " + inte.getDirectLink());
 			System.out.println("\n");
 		}
-		System.out.println("\n########################");
+		System.out.println("########################");
 	}
 
 }

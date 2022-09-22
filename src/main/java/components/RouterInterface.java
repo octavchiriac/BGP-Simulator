@@ -1,20 +1,21 @@
 package components;
 
-import java.util.ArrayList;
-
 public class RouterInterface {
 
 	public String name;
 	public String ipAddress;
 	public String subnetMask;
 	public boolean isUp;
-	public ArrayList<String> directLinks;
+	public String directLink;
+	public String as;
 
-	public RouterInterface(String name, String ipAddress, String subnetMask) {
+	public RouterInterface(String name, String ipAddress, String subnetMask, String as) {
 		super();
 		this.name = name;
 		this.ipAddress = ipAddress;
 		this.subnetMask = subnetMask;
+		this.as = as;
+		this.isUp = true;
 	}
 
 	public String getName() {
@@ -41,6 +42,14 @@ public class RouterInterface {
 		this.subnetMask = subnetMask;
 	}
 
+	public String getDirectLink() {
+		return directLink;
+	}
+
+	public void setDirectLink(String directLink) {
+		this.directLink = directLink;
+	}
+
 	public boolean isUp() {
 		return isUp;
 	}
@@ -49,12 +58,12 @@ public class RouterInterface {
 		this.isUp = isUp;
 	}
 
-	public ArrayList<String> getDirectLinks() {
-		return directLinks;
+	public String getAs() {
+		return as;
 	}
 
-	public void setDirectLinks(ArrayList<String> directLinks) {
-		this.directLinks = directLinks;
+	public void setAs(String as) {
+		this.as = as;
 	}
-
+	
 }

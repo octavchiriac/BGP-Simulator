@@ -1,5 +1,8 @@
 package components;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class IpFunctions {
 
     public static String getIpInBinary(String ip) {
@@ -28,6 +31,15 @@ public class IpFunctions {
 
         return networkAddress.substring(0, networkAddress.length() - 1);
     }
+    
+    public static Map<Object, String> reverseMap(Map<String, Object> map) {
+		Map<Object, String> myNewHashMap = new HashMap<>();
+		for(Map.Entry<String, Object> entry : map.entrySet()){
+		    myNewHashMap.put(entry.getValue(), entry.getKey());
+		}
+		
+		return myNewHashMap;
+	}
 
     // TODO: Implement send-receive packet functionality
     public static void sendIPPacket(String sourceIp, String destinationIp, TCPpacket data) {

@@ -1,14 +1,18 @@
 package components;
 
+import java.io.IOException;
+
 public class DoTest {
 
-	public static void main(String[] args) {
-
-		String ip = "10.11.5.211";
-		String ip2 = "10.11.5.2";
-		String mask = "255.255.255.0";
-
-		System.out.println(IpFunctions.getNetworkAddress(ip, mask));
-		System.out.println(IpFunctions.getNetworkAddress(ip2, mask));
+	public static void main(String[] args) throws IOException {
+		
+		// initialize routers array with elements from the input file
+		ParseInputFile parseInput = new ParseInputFile();
+		parseInput.parseRouterInterfaces();
+		parseInput.parseDirectLinks();
+		
+		for(int i = 0; i < 3; i++) {
+			Globals.routers.get(i).printRouterInfo();	
+		}
 	}
 }
