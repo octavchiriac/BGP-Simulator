@@ -2,6 +2,8 @@ package packets;
 
 import java.net.Inet4Address;
 
+import utils.BinaryFunctions;
+
 public class IpPacket extends Packet{
 
 	private int version;

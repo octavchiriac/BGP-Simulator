@@ -1,8 +1,8 @@
-package packets;
+package utils;
 
 public class BinaryFunctions {
 
-	static Object bitsArrayToObject(String bitsArray, int offset, int size, Class<?> type) {
+	public static Object bitsArrayToObject(String bitsArray, int offset, int size, Class<?> type) {
 		Object obj = null;
 		String subst = "";
 		
@@ -24,7 +24,7 @@ public class BinaryFunctions {
 		return obj;
 	}
 	
-	static String toBitsArray (Object input, int size) {
+	public static String toBitsArray (Object input, int size) {
 		String bitsArray = "";
 		
 		if(input instanceof Boolean) {

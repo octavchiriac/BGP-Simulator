@@ -1,5 +1,7 @@
 package packets;
 
+import utils.BinaryFunctions;
+
 public class TcpPacket extends Packet{
 
 	private int sourcePort;
