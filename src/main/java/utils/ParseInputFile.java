@@ -1,4 +1,4 @@
-package components;
+package utils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -9,6 +9,11 @@ import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import components.Globals;
+import components.IpFunctions;
+import components.Router;
+import components.RouterInterface;
 
 public class ParseInputFile {
 
