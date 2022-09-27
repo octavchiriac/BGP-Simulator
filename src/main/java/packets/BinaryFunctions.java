@@ -16,6 +16,8 @@ public class BinaryFunctions {
 			obj = Integer.parseInt(subst, 2);
 		} else if(type.toString().contains("Boolean")) {
 			obj = subst.equals("1") ? true : false;
+		} else if(type.toString().contains("Address")){
+			obj = convertBinaryToIp(subst);
 		} else {
 			obj = convertBinaryToString(subst);
 		}
@@ -31,7 +33,11 @@ public class BinaryFunctions {
 			bitsArray += String.format("%" + size + "s", Integer.toBinaryString((int) input))
 					.replace(' ','0');
 		} else {
-			bitsArray += convertStringToBinary((String) input);
+			if(input.toString().contains(".")) {
+				bitsArray += convertIpToBinary((String) input);
+			} else {
+				bitsArray += convertStringToBinary((String) input);
+			}
 		}
 		
 		return bitsArray;
@@ -61,5 +67,32 @@ public class BinaryFunctions {
 	    }
 
 	    return stringBuilder.toString();
+	}
+	
+	private static String convertIpToBinary(String ip) {
+
+        String binaryIp = "";
+        String[] tokens = ip.split("\\.");
+
+        for (String token : tokens) {
+            String binaryToken = String.format("%8s", Integer.toBinaryString(Integer.parseInt(token))).replace(' ',
+                    '0');
+            binaryIp += binaryToken;
+        }
+
+        return binaryIp;
+    }
+	
+	private static String convertBinaryToIp(String input) {
+		StringBuilder stringBuilder = new StringBuilder();
+	    int charCode;
+	    
+	    for (int i = 0; i < input.length(); i += 8) {
+	        charCode = Integer.parseInt(input.substring(i, i + 8), 2);
+	        stringBuilder.append(charCode);
+	        stringBuilder.append(".");
+	    }
+
+	    return stringBuilder.toString().substring(0, stringBuilder.length() - 1);
 	}
 }

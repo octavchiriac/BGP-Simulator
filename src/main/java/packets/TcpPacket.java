@@ -1,6 +1,6 @@
 package packets;
 
-public class TcpPacket {
+public class TcpPacket extends Packet{
 
 	private int sourcePort;
     private int destinationPort;
@@ -17,7 +17,6 @@ public class TcpPacket {
     private int windowSize;
     private int checksum;
     private int urgentPointer;
-    private String data;
 	
 	public TcpPacket(int sourcePort, int destinationPort, int sequenceNumber, int acknowledgementNumber,
 			int dataOffset, int reserved, boolean urg, boolean ack, boolean psh, boolean rst, boolean syn,
@@ -81,10 +80,6 @@ public class TcpPacket {
 				BinaryFunctions.toBitsArray(this.data, 0); 
 		
 		return bitsArray;
-	}
-
-	public String getData() {
-		return data;
 	}
 
 	public int getDestinationPort() {
