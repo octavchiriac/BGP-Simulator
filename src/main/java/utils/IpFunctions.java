@@ -1,4 +1,4 @@
-package components;
+package utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,13 +40,4 @@ public class IpFunctions {
 		
 		return myNewHashMap;
 	}
-
-    // TODO: Implement send-receive packet functionality
-    public static void sendIPPacket(String sourceIp, String destinationIp, TCPpacket data) {
-        System.out.println("Sending IP packet from " + sourceIp + " to " + destinationIp + " with data: " + data.toString());
-    }
-    public static void listenToPort(int port) {
-        System.out.println("Listening to port " + port);
-    }
-
 }
