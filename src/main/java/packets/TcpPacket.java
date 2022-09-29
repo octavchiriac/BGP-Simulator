@@ -95,4 +95,27 @@ public class TcpPacket extends Packet{
 	public boolean isSyn() {
 		return syn;
 	}
+
+	@Override
+	public String toString() {
+		return "TcpPacket{" +
+				"sourcePort=" + sourcePort +
+				", destinationPort=" + destinationPort +
+				", sequenceNumber=" + sequenceNumber +
+				", acknowledgementNumber=" + acknowledgementNumber +
+				", dataOffset=" + dataOffset +
+				", reserved=" + reserved +
+				", urg=" + urg +
+				", ack=" + ack +
+				", psh=" + psh +
+				", rst=" + rst +
+				", syn=" + syn +
+				", fin=" + fin +
+				", windowSize=" + windowSize +
+				", checksum=" + checksum +
+				", urgentPointer=" + urgentPointer +
+				", data='" + data + '\'' +
+				", id=" + id +
+				'}';
+	}
 }
