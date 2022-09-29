@@ -1,7 +1,8 @@
-package components;
+package runner;
 
 import java.io.IOException;
 
+import components.Globals;
 import packets.HdlcPacket;
 import packets.IpPacket;
 import packets.Packet;
