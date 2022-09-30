@@ -1,5 +1,4 @@
 package components;
-import java.util.ArrayList;
 
 /*
  * "BGP Routing Table – table containing information about the best path to each destination network"
