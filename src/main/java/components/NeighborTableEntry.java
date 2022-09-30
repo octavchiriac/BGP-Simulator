@@ -1,12 +1,10 @@
 package components;
-import java.util.ArrayList;
 
 /*
- * "BGP Routing Table – table containing information about the best path to each destination network"
- * BGP Routing Table – the main IP routing tables that contains only the best routes from BGP Table.
- * After BGP has selected the best path to a network, that path is added to the main IP routing table.
+ * "BGP Neighbor Table – table containing information about BGP neighbors"
+ * This class is used to store the information of a neighbor router
  */
-public class RoutingTableEntry {
+public class NeighborTableEntry {
 
 	public String destinationIp;
 	public String subnetMask;
@@ -14,7 +12,7 @@ public class RoutingTableEntry {
 	public String interfaceName;
 	public int metric;
 
-	public RoutingTableEntry(String destinationIp, String subnetMask, String nextHop, String interfaceName, int metric){
+	public NeighborTableEntry(String destinationIp, String subnetMask, String nextHop, String interfaceName, int metric){
 		super();
 		this.destinationIp=destinationIp;
 		this.subnetMask=subnetMask;
@@ -61,6 +59,10 @@ public class RoutingTableEntry {
 
 	public void setMetric(int metric) {
 		this.metric = metric;
+	}
+
+	public String showIpBgpNeighbor(String destinationIp){
+		return "show ip bgp neighbor " + destinationIp;
 	}
 
 

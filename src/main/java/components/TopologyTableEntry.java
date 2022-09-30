@@ -1,12 +1,12 @@
 package components;
-import java.util.ArrayList;
 
 /*
- * "BGP Routing Table – table containing information about the best path to each destination network"
- * BGP Routing Table – the main IP routing tables that contains only the best routes from BGP Table.
- * After BGP has selected the best path to a network, that path is added to the main IP routing table.
+ * BGP Table (also known as BGP topology table, BGP RIB) contains the network layer reachability information (NLRI)
+ * learned in compliance with BGP and NLRI attributes (path attribute, PA) corresponding to these path.
+ * Essentially, NLRI is a prefix and its length. BGP table contains all the routes from all the neighbors,
+ * several routes to the same network with different attributes.
  */
-public class RoutingTableEntry {
+public class TopologyTableEntry {
 
 	public String destinationIp;
 	public String subnetMask;
@@ -14,7 +14,7 @@ public class RoutingTableEntry {
 	public String interfaceName;
 	public int metric;
 
-	public RoutingTableEntry(String destinationIp, String subnetMask, String nextHop, String interfaceName, int metric){
+	public TopologyTableEntry(String destinationIp, String subnetMask, String nextHop, String interfaceName, int metric){
 		super();
 		this.destinationIp=destinationIp;
 		this.subnetMask=subnetMask;
