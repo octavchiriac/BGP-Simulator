@@ -2,7 +2,10 @@ package components;
 
 import multithread.HandlePktTask;
 import multithread.ThreadPool;
+import packets.HdlcPacket;
+import packets.IpPacket;
 import packets.Packet;
+import packets.TcpPacket;
 import utils.TypeHandlers;
 
 import java.util.ArrayList;
@@ -20,7 +23,7 @@ public class Router implements Runnable {
     public Router(String name) {
         super();
         this.name = name;
-        this.isEnabled = true;
+        this.isEnabled = true; // TODO Implement enable/disable router
     }
 
     public String getName() {
@@ -97,8 +100,9 @@ public class Router implements Runnable {
                 String msg;
                 while ((msg = queue.poll()) != null) {
                     System.out.println("Packet received at " + name + " at " + TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
+
                     // Creating a task to handle the packet and adding it to the thread pool
-                    HandlePktTask task = new HandlePktTask(msg, name);
+                    HandlePktTask task = new HandlePktTask(msg, name, interfaces);
                     ThreadPool.submit(task);
                 }
             } catch (Exception e) {

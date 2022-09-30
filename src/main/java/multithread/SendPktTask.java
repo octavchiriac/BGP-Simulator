@@ -6,25 +6,14 @@ import components.RouterInterface;
 
 public class SendPktTask implements Runnable {
     private String destIP;
-    private String destPort;
     private String srcIP;
-    private String srcPort;
     private String bitStream;
     private int id;
 
-    public SendPktTask(String destIP, String destPort, String srcIP, String srcPort) {
-        this.destIP = destIP;
-        this.destPort = destPort;
-        this.srcIP = srcIP;
-        this.srcPort = srcPort;
-        this.id = Math.abs((int) System.currentTimeMillis());
-    }
-
-    public SendPktTask(String bs, String destIP, String destPort) {
+    public SendPktTask(String bs, String destIP) {
         bitStream = bs;
         this.destIP = destIP;
-        this.destPort = destPort;
-        this.id = Math.abs((int) System.currentTimeMillis());
+        this.id = Math.abs((int) System.currentTimeMillis() + (int) (Math.random() * 100));
     }
 
     private static Router getRouterByIP(String ip) {
@@ -41,7 +30,7 @@ public class SendPktTask implements Runnable {
     @Override
     public void run() {
         System.out.println("Sending bitStream through link " + id);
-        Router dest = getRouterByIP(destIP);
+        Router dest = getRouterByIP(destIP); // TODO IMPLEMENT ROUTING NEIGHBOURS HERE?
         if (dest != null) {
             // queueing packet at destination router
             dest.queuePacket(bitStream, id);
