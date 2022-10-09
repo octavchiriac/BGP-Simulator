@@ -1,80 +1,53 @@
 package components;
 
+import java.util.ArrayList;
+
 /*
  * "BGP Neighbor Table – table containing information about BGP neighbors"
  * This class is used to store the information of a neighbor router
+ * https://techhub.hpe.com/eginfolib/networking/docs/switches/K-KA-KB/15-18/5998-8164_mrg/content/ch15s05.html
  */
 public class NeighborTableEntry {
 
-	public String destinationIp;
-	public String subnetMask;
-	public String nextHop;
-	public String interfaceName;
-	public int metric;
+	public ArrayList<String> neighborsIp;
+	public ArrayList<String> neighborsAs;
 
-	public NeighborTableEntry(String destinationIp, String subnetMask, String nextHop, String interfaceName, int metric){
+	public NeighborTableEntry(){
 		super();
-		this.destinationIp=destinationIp;
-		this.subnetMask=subnetMask;
-		this.nextHop=nextHop;
-		this.interfaceName=interfaceName;
-		this.metric=metric;
+		neighborsIp = new ArrayList<String>();
+		neighborsAs = new ArrayList<String>();
 	}
 
-	public String getDestinationIp() {
-		return destinationIp;
+	public void addNeighbor(String ip, String as){
+		neighborsIp.add(ip);
+		neighborsAs.add(as);
 	}
 
-	public void setDestinationIp(String destinationIp) {
-		this.destinationIp = destinationIp;
+	public void editNeighbor(String ip, String newIp, String newAs){
+		int index = neighborsIp.indexOf(ip);
+		neighborsIp.set(index, newIp);
+		neighborsAs.set(index, newAs);
 	}
 
-	public String getSubnetMask() {
-		return subnetMask;
+	public void deleteNeighbor(String ip){
+		int index = neighborsIp.indexOf(ip);
+		neighborsIp.remove(index);
+		neighborsAs.remove(index);
 	}
 
-	public void setSubnetMask(String subnetMask) {
-		this.subnetMask = subnetMask;
+	public ArrayList<String> getNeighborsIp() {
+		return neighborsIp;
 	}
-
-	public String getNextHop() {
-		return nextHop;
-	}
-
-	public void setNextHop(String nextHop) {
-		this.nextHop = nextHop;
-	}
-
-	public String getInterfaceName() {
-		return interfaceName;
-	}
-
-	public void setInterfaceName(String interfaceName) {
-		this.interfaceName = interfaceName;
-	}
-
-	public int getMetric() {
-		return metric;
-	}
-
-	public void setMetric(int metric) {
-		this.metric = metric;
-	}
-
-	public String showIpBgpNeighbor(String destinationIp){
-		return "show ip bgp neighbor " + destinationIp;
-	}
-
 
 
 	@Override
 	public String toString() {
-		return "RoutingTable{" +
-				"destinationIp='" + destinationIp + '\'' +
-				", subnetMask='" + subnetMask + '\'' +
-				", nextHop='" + nextHop + '\'' +
-				", interfaceName='" + interfaceName + '\'' +
-				", metric='" + metric + '\'' +
-				'}';
+		//return "NeighborTableEntry [neighborsIp=" + neighborsIp + ", neighborsAs=" + neighborsAs + "]";
+		String result = "NeighborTableEntry {";
+		for(int i=0; i<neighborsIp.size(); i++) {
+			result += "Neighbor IP: " + neighborsIp.get(i) + " Neighbor AS: " + neighborsAs.get(i) + ",";
+		}
+		result += "}";
+		return result;
 	}
 }
