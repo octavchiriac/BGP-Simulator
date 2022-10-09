@@ -67,6 +67,16 @@ public class Router implements Runnable {
         }
         return enabledInterfaces;
     }
+    
+    public ArrayList<String> getEnabledInterfacesAddresses() {
+        ArrayList<String> enabledInterfaces = new ArrayList<String>();
+        for (RouterInterface i : interfaces) {
+            if (i.isUp) {
+                enabledInterfaces.add(i.getIpAddress());
+            }
+        }
+        return enabledInterfaces;
+    }
 
     public void queuePacket(String bs, int id) {
         System.out.println("Packet queued at " + name + " through link " + id + " at " + TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
@@ -91,10 +101,10 @@ public class Router implements Runnable {
      */
     @Override
     public void run() {
-        System.out.println("\n");
+//    	System.out.println("########################");
         System.out.println("Router " + name + " starting, is the router up: " + isEnabled);
-        System.out.println("\n");
-        System.out.println("########################");
+//        System.out.println("########################");
+//        System.out.println("\n");
         while (isEnabled) {
             try {
                 String msg;
@@ -111,4 +121,67 @@ public class Router implements Runnable {
             }
         }
     }
+    
+    public String sendTcpPacket(int sourcePort, int destinationPort, int seqNumber, int ackNumber, String sourceIpAddress, String destinationIpAddress, String destinationMacAddress,
+			boolean isSyn, boolean isAck) {
+
+	    Packet tcpPacket = new TcpPacket(sourcePort, destinationPort, seqNumber, ackNumber, 0, 0, false, isAck, 
+	    		false, false, isSyn, false, 0, 0, 0, "");
+	    String bitArrayTcp = tcpPacket.packetToBitArray();
+	    
+	    Packet ipPacket = new IpPacket(4, Globals.IP_HEADER_LENGTH, 0, bitArrayTcp.length()/8 + Globals.IP_HEADER_LENGTH, 
+	    		0, false, false, true, 0, 255, 6, 0, sourceIpAddress, destinationIpAddress, bitArrayTcp);
+        String bitArrayIp = ipPacket.packetToBitArray();
+        
+        Packet hdlcPacket = new HdlcPacket("01111110", destinationMacAddress, "00000000", bitArrayIp, "00000000");
+        
+        return hdlcPacket.packetToBitArray();
+	}
+	
+	public boolean receiveTcpPacket(String bitArrayHdlc, boolean isSyn, boolean isAck) {
+		boolean hasError = false;
+		boolean isFound = false;
+		String interfaceName = "";
+		String routerName = this.getName();
+	
+		Packet hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
+
+		IpPacket ipPacket2 = new IpPacket(hdlcPacket2.getData());
+        
+        // verify that destination ip address is one of the router's interfaces
+		for(RouterInterface inter : this.getEnabledInterfaces()) {
+			if(inter.getIpAddress().equals(ipPacket2.getDestinationAddress())) {
+				isFound = true;
+				interfaceName = inter.getName();
+				System.out.println("Destination address is matched by interface " + interfaceName + " on router " + routerName);
+				break;
+			}
+		}
+		if(!isFound) {
+    		hasError = true;
+    		System.err.println("Destination address " + ipPacket2.getDestinationAddress() + " is NOT matched any interface on router " + routerName);
+    		System.err.println("Package dropped!");
+    	} else {
+	        TcpPacket tcpPacket2 = new TcpPacket(ipPacket2.getData());
+	        
+	        if(isSyn) {
+	        	if(tcpPacket2.isSyn() == isSyn) {
+	        		System.out.println("SYN packet sucessfully received by router " + routerName + " on interface " + interfaceName);
+		        } else {
+		        	hasError = true;
+		        	System.err.println("Packet received by router " + routerName + " on interface " + interfaceName + " expected SYN but does not contain it.");
+		        }
+	        }
+	        
+	        if(isAck) {
+	        	if(tcpPacket2.isAck() == isAck) {
+	        	System.out.println("ACK packet sucessfully received by router " + routerName + " on interface " + interfaceName);
+		        } else {
+		        	hasError = true;
+		        	System.err.println("Packet received by router " + routerName + " on interface " + interfaceName + " expected ACK but does not contain it.");
+		       	}
+	        }
+    	}
+		return hasError;
+	}
 }
