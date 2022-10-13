@@ -7,12 +7,12 @@ import java.util.ArrayList;
  * This class is used to store the information of a neighbor router
  * https://techhub.hpe.com/eginfolib/networking/docs/switches/K-KA-KB/15-18/5998-8164_mrg/content/ch15s05.html
  */
-public class NeighborTableEntry {
+public class NeighborTable {
 
 	public ArrayList<String> neighborsIp;
 	public ArrayList<String> neighborsAs;
 
-	public NeighborTableEntry(){
+	public NeighborTable(){
 		super();
 		neighborsIp = new ArrayList<String>();
 		neighborsAs = new ArrayList<String>();
