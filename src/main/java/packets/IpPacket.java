@@ -20,10 +20,10 @@ public class IpPacket extends Packet{
 	private int headerChecksum;
 	private String sourceAddress;
 	private String destinationAddress;
-	
+
 	public IpPacket(int version, int headerLength, int seviceType, int totalLength, int identification,
-			boolean reserved, boolean df, boolean mf, int fragmentOffset, int timeToLive, int protocol,
-			int headerChecksum, String sourceAddress, String destinationAddress, String data) {
+					boolean reserved, boolean df, boolean mf, int fragmentOffset, int timeToLive, int protocol,
+					int headerChecksum, String sourceAddress, String destinationAddress, String data) {
 		super();
 		this.version = version;
 		this.headerLength = headerLength;
@@ -101,8 +101,33 @@ public class IpPacket extends Packet{
 	public int getTimeToLive() {
 		return timeToLive;
 	}
+	public void decreaseTimeToLive() {
+		this.timeToLive--;
+	}
 	
 	public int getHeaderChecksum() {
 		return headerChecksum;
 	}
+
+	@Override
+	public String toString() {
+		return "IpPacket{" +
+				"version=" + version +
+				", headerLength=" + headerLength +
+				", seviceType=" + seviceType +
+				", totalLength=" + totalLength +
+				", identification=" + identification +
+				", reserved=" + reserved +
+				", df=" + df +
+				", mf=" + mf +
+				", fragmentOffset=" + fragmentOffset +
+				", timeToLive=" + timeToLive +
+				", protocol=" + protocol +
+				", headerChecksum=" + headerChecksum +
+				", sourceAddress='" + sourceAddress + '\'' +
+				", destinationAddress='" + destinationAddress + '\'' +
+				'}';
+	}
+
+
 }
