@@ -1,6 +1,6 @@
 package components;
 
-import multithread.HandlePktTask;
+import multithread.ReceiveTcpPacket;
 import multithread.ThreadPool;
 import packets.HdlcPacket;
 import packets.IpPacket;
@@ -78,8 +78,8 @@ public class Router implements Runnable {
         return enabledInterfaces;
     }
 
-    public void queuePacket(String bs, int id) {
-        System.out.println("Packet queued at " + name + " through link " + id + " at " + TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
+    public void queuePacket(String bs) {
+        System.out.println("[INFO] Packet queued at " + name + " at " + TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
         queue.add(bs);
     }
 
@@ -101,18 +101,14 @@ public class Router implements Runnable {
      */
     @Override
     public void run() {
-//    	System.out.println("########################");
-        System.out.println("Router " + name + " starting, is the router up: " + isEnabled);
-//        System.out.println("########################");
-//        System.out.println("\n");
+        System.out.println("[" + name  + "] Router starting, is the router up: " + isEnabled);
         while (isEnabled) {
             try {
                 String msg;
                 while ((msg = queue.poll()) != null) {
-                    System.out.println("Packet received at " + name + " at " + TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
 
                     // Creating a task to handle the packet and adding it to the thread pool
-                    HandlePktTask task = new HandlePktTask(msg, name, interfaces);
+                    ReceiveTcpPacket task = new ReceiveTcpPacket(msg);
                     ThreadPool.submit(task);
                 }
             } catch (Exception e) {
@@ -122,8 +118,9 @@ public class Router implements Runnable {
         }
     }
     
-    public String sendTcpPacket(int sourcePort, int destinationPort, int seqNumber, int ackNumber, String sourceIpAddress, String destinationIpAddress, String destinationMacAddress,
-			boolean isSyn, boolean isAck) {
+    public String sendTcpPacket(int sourcePort, int destinationPort, int seqNumber, int ackNumber, 
+    		String sourceIpAddress, String destinationIpAddress, String destinationMacAddress,
+    		boolean isSyn, boolean isAck) {
 
 	    Packet tcpPacket = new TcpPacket(sourcePort, destinationPort, seqNumber, ackNumber, 0, 0, false, isAck, 
 	    		false, false, isSyn, false, 0, 0, 0, "");

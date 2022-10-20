@@ -1,16 +1,13 @@
 package runner;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
+import java.util.AbstractMap;
+import java.util.Map.Entry;
 
-import multithread.SendPktTask;
+import multithread.SendTcpPacket;
 import multithread.ThreadPool;
 import components.Globals;
 import components.Router;
-import packets.HdlcPacket;
-import packets.IpPacket;
-import packets.Packet;
-import packets.TcpPacket;
 import utils.ParseInputFile;
 
 public class DoTest {
@@ -71,58 +68,50 @@ public class DoTest {
 //        }
 //
         // ROUTERS NEED TO BE RUN AT STARTUP AFTER FILE PARSING
-//        for (Router r : Globals.routers) {
-//            Thread t = new Thread(r);
-//            t.start();
-//        }     
-
+        for (Router r : Globals.routers) {
+            Thread t = new Thread(r);
+            t.start();
+        }
+        
+        //TODO how to wait between fors ??
+        
         Router r1 = Globals.routers.get(0);
         Router r2 = Globals.routers.get(1);
-       
-        establishTcpConection(r1, r2);
-
+        Router r3 = Globals.routers.get(2);
         
-//
-//        // Test thread pool
-//        SendPktTask task1 = new SendPktTask(hdlcPacket2.packetToBitArray(), "100.1.2.3");
-//
-//        destinationAddress = "100.1.2.1";
-//        tcpPacket = new TcpPacket(1027, 179, 7, 7, 7, 7, false, false, false, false, true, true, 0, 0, 0, "MUIE 123 MUMU23");
-//        bitArrayTcp = tcpPacket.packetToBitArray();
-//        ipPacket = new IpPacket(4, 5, 0, 15, 3, false, false, true, 0, 255, 6, 7, sourceAddress, destinationAddress, bitArrayTcp);
-//        bitArrayIp = ipPacket.packetToBitArray();
-//        hdlcPacket = new HdlcPacket("01111110", "11111111", "00000000", bitArrayIp, "00000000");
-//        bitArrayHdlc = hdlcPacket.packetToBitArray();
-//        hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
-//
-//        SendPktTask task2 = new SendPktTask(hdlcPacket2.packetToBitArray(), "100.1.2.1");
-//
-//        destinationAddress = "10.0.0.2";
-//        tcpPacket = new TcpPacket(1027, 179, 7, 7, 7, 7, false, false, false, false, true, true, 0, 0, 0, "MUIE 123 MUMU23");
-//        bitArrayTcp = tcpPacket.packetToBitArray();
-//        ipPacket = new IpPacket(4, 5, 0, 15, 3, false, false, true, 0, 255, 6, 7, sourceAddress, destinationAddress, bitArrayTcp);
-//        bitArrayIp = ipPacket.packetToBitArray();
-//        hdlcPacket = new HdlcPacket("01111110", "11111111", "00000000", bitArrayIp, "00000000");
-//        bitArrayHdlc = hdlcPacket.packetToBitArray();
-//        hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
-//
-//        SendPktTask task3 = new SendPktTask(hdlcPacket2.packetToBitArray(), "10.0.0.2");
-//
-//        destinationAddress = "10.1.50.4";
-//        tcpPacket = new TcpPacket(1027, 179, 7, 7, 7, 7, false, false, false, false, true, true, 0, 0, 0, "MUIE 123 MUMU23");
-//        bitArrayTcp = tcpPacket.packetToBitArray();
-//        ipPacket = new IpPacket(4, 5, 0, 15, 3, false, false, true, 0, 255, 6, 7, sourceAddress, destinationAddress, bitArrayTcp);
-//        bitArrayIp = ipPacket.packetToBitArray();
-//        hdlcPacket = new HdlcPacket("01111110", "11111111", "00000000", bitArrayIp, "00000000");
-//        bitArrayHdlc = hdlcPacket.packetToBitArray();
-//        hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
-//
-//        SendPktTask task4 = new SendPktTask(hdlcPacket2.packetToBitArray(), "10.1.50.4");
-//        ThreadPool.run();
-//
-//        ThreadPool.submit(task1);
-//        ThreadPool.submit(task2);
-//        ThreadPool.submit(task3);
-//        ThreadPool.submit(task4);
+        java.util.List<java.util.Map.Entry<Router,Router>> connectedRouters = new java.util.ArrayList<>();
+        Entry<Router,Router> pair1 = new AbstractMap.SimpleEntry<>(r1,r2);
+        Entry<Router,Router> pair2 = new AbstractMap.SimpleEntry<>(r2,r3);
+        Entry<Router,Router> pair3 = new AbstractMap.SimpleEntry<>(r3,r1);
+        connectedRouters.add(pair1);
+        connectedRouters.add(pair2);
+        connectedRouters.add(pair3);
+       
+        ThreadPool.run();
+        
+        for(Entry<Router, Router> pair : connectedRouters) {
+          SendTcpPacket task = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0, 
+        		  pair.getKey().getEnabledInterfaces().get(1).getIpAddress(),  //HARDCODED FOR NOW, WAITING FOR NEIGHBOR TABLE
+  				 pair.getValue().getEnabledInterfaces().get(1).getIpAddress(), Globals.DESTINATION_MAC_ADDRESS, true, false);
+        
+          ThreadPool.submit(task);
+        }
+        
+        for(Entry<Router, Router> pair : connectedRouters) {
+            SendTcpPacket task = new SendTcpPacket(Globals.TCP_PORT, Globals.UDP_PORT, 0, 1, 
+            		pair.getValue().getEnabledInterfaces().get(1).getIpAddress(),
+            		pair.getKey().getEnabledInterfaces().get(1).getIpAddress(), 
+   				 Globals.DESTINATION_MAC_ADDRESS, true, true);
+            ThreadPool.submit(task);
+          }
+        
+        for(Entry<Router, Router> pair : connectedRouters) {
+            SendTcpPacket task = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 1, 1, 
+            		pair.getKey().getEnabledInterfaces().get(1).getIpAddress(),  //HARDCODED FOR NOW, WAITING FOR NEIGHBOR TABLE
+            		pair.getValue().getEnabledInterfaces().get(1).getIpAddress(), 
+					 Globals.DESTINATION_MAC_ADDRESS, false, true);
+            ThreadPool.submit(task);
+          }
+//        ThreadPool.stop();
     }
 }
