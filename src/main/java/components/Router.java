@@ -2,10 +2,6 @@ package components;
 
 import multithread.ReceiveTcpPacket;
 import multithread.ThreadPool;
-import packets.HdlcPacket;
-import packets.IpPacket;
-import packets.Packet;
-import packets.TcpPacket;
 import utils.TypeHandlers;
 
 import java.util.ArrayList;
@@ -60,7 +56,11 @@ public class Router implements Runnable {
         this.routingTable = routingTable;
     }
     
-    private static RouterInterface getRouterInterfaceByIP(String ip) {
+    public NeighborTable getNeighborTable() {
+		return neighborTable;
+	}
+
+	private static RouterInterface getRouterInterfaceByIP(String ip) {
         for (Router r : Globals.routers) {
             for (RouterInterface i : r.getEnabledInterfaces()) {
                 if (i.getIpAddress().equals(ip)) {
@@ -108,6 +108,8 @@ public class Router implements Runnable {
 						" from AS " + neighborRouter.getAs());
 			}
 		}
+		
+		Globals.nrRoutersStarted++;
     }
 
     public void printRouterInfo() {
@@ -121,6 +123,10 @@ public class Router implements Runnable {
             System.out.println("\n");
         }
         System.out.println("########################");
+    }
+    
+    public void printNeighborTable() {
+    	System.out.println("[" + this.getName() + "] Neighbor table: \n" + this.getNeighborTable());
     }
 
     /**

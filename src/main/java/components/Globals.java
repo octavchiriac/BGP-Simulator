@@ -9,4 +9,5 @@ public class Globals {
 	public static String DESTINATION_MAC_ADDRESS = "11111111";
 	public static int TCP_PORT = 179;
 	public static int UDP_PORT = 1027;
+	public static int nrRoutersStarted = 0;
 }

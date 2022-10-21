@@ -42,12 +42,12 @@ public class NeighborTable {
 
 	@Override
 	public String toString() {
-		//return "NeighborTableEntry [neighborsIp=" + neighborsIp + ", neighborsAs=" + neighborsAs + "]";
-		String result = "NeighborTableEntry {";
-		for(int i=0; i<neighborsIp.size(); i++) {
-			result += "Neighbor IP: " + neighborsIp.get(i) + " Neighbor AS: " + neighborsAs.get(i) + ",";
+		String result = "";
+		
+		for(int i = 0; i < neighborsIp.size(); i++) {
+			result += "Neighbor IP: " + neighborsIp.get(i) + " Neighbor AS: " + neighborsAs.get(i) + "\n";
 		}
-		result += "}";
+
 		return result;
 	}
 }

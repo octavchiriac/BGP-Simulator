@@ -93,7 +93,7 @@ public class BGPRoutingTable {
     }
 
     public void setPathAS(String pathAS) {
-        pathAS = pathAS;
+        this.pathAS = pathAS;
     }
 
 
