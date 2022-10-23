@@ -1,11 +1,7 @@
 package components;
 
-import multithread.HandlePktTask;
+import multithread.ReceiveTcpPacket;
 import multithread.ThreadPool;
-import packets.HdlcPacket;
-import packets.IpPacket;
-import packets.Packet;
-import packets.TcpPacket;
 import utils.TypeHandlers;
 
 import java.util.ArrayList;
@@ -18,12 +14,17 @@ public class Router implements Runnable {
     public ArrayList<RouterInterface> interfaces;
     public boolean isEnabled;
     public RoutingTableEntry routingTable;
-    private BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
+    private BlockingQueue<String> queue ;
+    NeighborTable neighborTable;
+    ArrayList<Router> tcpConnectedRouters;
 
     public Router(String name) {
         super();
         this.name = name;
-        this.isEnabled = true; // TODO Implement enable/disable router
+        this.isEnabled = false;
+        this.neighborTable = new NeighborTable();
+        this.queue = new LinkedBlockingQueue<>();
+        this.tcpConnectedRouters = new ArrayList<>();
     }
 
     public String getName() {
@@ -48,6 +49,7 @@ public class Router implements Runnable {
 
     public void setEnabled(boolean isEnabled) {
         this.isEnabled = isEnabled;
+        System.out.println("[" + name  + "] Router state : " + (isEnabled? "Enabled" : "Disabled"));
     }
 
     public RoutingTableEntry getRoutingTable() {
@@ -56,6 +58,58 @@ public class Router implements Runnable {
 
     public void setRoutingTable(RoutingTableEntry routingTable) {
         this.routingTable = routingTable;
+    }
+    
+    public NeighborTable getNeighborTable() {
+		return neighborTable;
+	}
+
+    public ArrayList<Router> getTcpConnectedRouters() {
+        return tcpConnectedRouters;
+    }
+
+    public void printTcpConnectedRouters() {
+        System.out.print("[" + name  + "] TCP Connected routers : { ");
+        for(Router r : tcpConnectedRouters) {
+            System.out.print(r.getName() + " ");
+        }
+        System.out.println("}");
+    }
+
+    public void addTcpConnectedRouter(Router r) {
+        this.tcpConnectedRouters.add(r);
+    }
+
+    public static RouterInterface getRouterInterfaceByIP(String ip) {
+        for (Router r : Globals.routers) {
+            for (RouterInterface i : r.getEnabledInterfaces()) {
+                if (i.getIpAddress().equals(ip)) {
+                    return i;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Router getRouterByIP(String ip) {
+        for (Router r : Globals.routers) {
+            for (RouterInterface i : r.getEnabledInterfaces()) {
+                if (i.getIpAddress().equals(ip)) {
+                    return r;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Router getRouterByName(String name) {
+        for (Router r : Globals.routers) {{
+                if (r.getName().equals(name)) {
+                    return r;
+                }
+            }
+        }
+        return null;
     }
 
     public ArrayList<RouterInterface> getEnabledInterfaces() {
@@ -67,10 +121,36 @@ public class Router implements Runnable {
         }
         return enabledInterfaces;
     }
+    
+    public ArrayList<String> getEnabledInterfacesAddresses() {
+        ArrayList<String> enabledInterfaces = new ArrayList<String>();
+        for (RouterInterface i : interfaces) {
+            if (i.isUp) {
+                enabledInterfaces.add(i.getIpAddress());
+            }
+        }
+        return enabledInterfaces;
+    }
 
-    public void queuePacket(String bs, int id) {
-        System.out.println("Packet queued at " + name + " through link " + id + " at " + TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
+    public void queuePacket(String bs) {
+        System.out.println("[INFO] Packet queued at " + name + " at " + TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
         queue.add(bs);
+    }
+   
+    public void populateNeighborTable () {
+		for(RouterInterface i : this.getInterfaces()) {
+			
+			if(i.getDirectLink() != null) {
+				RouterInterface neighborRouter = getRouterInterfaceByIP(i.getDirectLink());
+				
+				neighborTable.addNeighbor(neighborRouter.getIpAddress(), neighborRouter.getAs());
+				
+				System.out.println("[" + name  + "] Discovered neighbor " + neighborRouter.getIpAddress() + 
+						" from AS " + neighborRouter.getAs());
+			}
+		}
+		
+		Globals.nrRoutersStarted++;
     }
 
     public void printRouterInfo() {
@@ -85,30 +165,160 @@ public class Router implements Runnable {
         }
         System.out.println("########################");
     }
+    
+    public void printNeighborTable() {
+    	System.out.println("[" + this.getName() + "] Neighbor table: \n" + this.getNeighborTable());
+    }
 
     /**
      *
      */
     @Override
     public void run() {
-        System.out.println("\n");
-        System.out.println("Router " + name + " starting, is the router up: " + isEnabled);
-        System.out.println("\n");
-        System.out.println("########################");
+        System.out.println("[" + name  + "] Router starting");
+        
+        // Enabling router
+        this.isEnabled = true;
+        
+        System.out.println("[" + name  + "] Router state : enabled");
+        
+        // Adding direct links to the neighbor table
+        populateNeighborTable();
+
+        // Listening for incoming messages
         while (isEnabled) {
             try {
+//                for(Router r : this.getTcpConnectedRouters()) {
+//                    System.out.println("[" + name + " -> " + r.getName() + "] KEEPALIVE");
+//                    Thread.sleep(5000);
+//                }
+
                 String msg;
                 while ((msg = queue.poll()) != null) {
-                    System.out.println("Packet received at " + name + " at " + TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
 
                     // Creating a task to handle the packet and adding it to the thread pool
-                    HandlePktTask task = new HandlePktTask(msg, name, interfaces);
+                    ReceiveTcpPacket task = new ReceiveTcpPacket(msg);
                     ThreadPool.submit(task);
                 }
             } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                System.err.println(e.getMessage());
             }
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+//public String sendTcpPacket(int sourcePort, int destinationPort, int seqNumber, int ackNumber, 
+//String sourceIpAddress, String destinationIpAddress, String destinationMacAddress,
+//boolean isSyn, boolean isAck) {
+//
+//Packet tcpPacket = new TcpPacket(sourcePort, destinationPort, seqNumber, ackNumber, 0, 0, false, isAck, 
+//	false, false, isSyn, false, 0, 0, 0, "");
+//String bitArrayTcp = tcpPacket.packetToBitArray();
+//
+//Packet ipPacket = new IpPacket(4, Globals.IP_HEADER_LENGTH, 0, bitArrayTcp.length()/8 + Globals.IP_HEADER_LENGTH, 
+//	0, false, false, true, 0, 255, 6, 0, sourceIpAddress, destinationIpAddress, bitArrayTcp);
+//String bitArrayIp = ipPacket.packetToBitArray();
+//
+//Packet hdlcPacket = new HdlcPacket("01111110", destinationMacAddress, "00000000", bitArrayIp, "00000000");
+//
+//return hdlcPacket.packetToBitArray();
+//}
+//
+//public boolean receiveTcpPacket(String bitArrayHdlc, boolean isSyn, boolean isAck) {
+//boolean hasError = false;
+//boolean isFound = false;
+//String interfaceName = "";
+//String routerName = this.getName();
+//
+//Packet hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
+//
+//IpPacket ipPacket2 = new IpPacket(hdlcPacket2.getData());
+//
+//// verify that destination ip address is one of the router's interfaces
+//for(RouterInterface inter : this.getEnabledInterfaces()) {
+//if(inter.getIpAddress().equals(ipPacket2.getDestinationAddress())) {
+//	isFound = true;
+//	interfaceName = inter.getName();
+//	System.out.println("Destination address is matched by interface " + interfaceName + " on router " + routerName);
+//	break;
+//}
+//}
+//if(!isFound) {
+//hasError = true;
+//System.err.println("Destination address " + ipPacket2.getDestinationAddress() + " is NOT matched any interface on router " + routerName);
+//System.err.println("Package dropped!");
+//} else {
+//TcpPacket tcpPacket2 = new TcpPacket(ipPacket2.getData());
+//
+//if(isSyn) {
+//	if(tcpPacket2.isSyn() == isSyn) {
+//		System.out.println("SYN packet sucessfully received by router " + routerName + " on interface " + interfaceName);
+//    } else {
+//    	hasError = true;
+//    	System.err.println("Packet received by router " + routerName + " on interface " + interfaceName + " expected SYN but does not contain it.");
+//    }
+//}
+//
+//if(isAck) {
+//	if(tcpPacket2.isAck() == isAck) {
+//	System.out.println("ACK packet sucessfully received by router " + routerName + " on interface " + interfaceName);
+//    } else {
+//    	hasError = true;
+//    	System.err.println("Packet received by router " + routerName + " on interface " + interfaceName + " expected ACK but does not contain it.");
+//   	}
+//}
+//}
+//return hasError;
+//}
+//
+//public static void establishTcpConection(Router sourceRouter, Router destinationRouter) {
+//	
+//	String bitArrayHdlc;
+//	boolean hasError;
+//
+//	// Sending SYN packet from source router
+//	System.out.println("[R1 -> R2]");
+//	System.out.println("Sending SYN packet");
+//	bitArrayHdlc = sourceRouter.sendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0, sourceRouter.getEnabledInterfaces().get(1).getIpAddress(),  //HARDCODED FOR NOW, WAITING FOR NEIGHBOR TABLE
+//		 destinationRouter.getEnabledInterfaces().get(2).getIpAddress(), 
+//		 Globals.DESTINATION_MAC_ADDRESS, true, false);
+//	
+//	// Receiving SYN packet to destination router
+//	hasError = destinationRouter.receiveTcpPacket(bitArrayHdlc, true, false);
+//	
+//	if(!hasError) {
+//		System.out.println("[R1 <- R2]");
+//		System.out.println("Sending SYN+ACK packet");
+//		bitArrayHdlc = destinationRouter.sendTcpPacket(Globals.TCP_PORT, Globals.UDP_PORT, 0, 1, destinationRouter.getEnabledInterfaces().get(2).getIpAddress(),
+//				 sourceRouter.getEnabledInterfaces().get(1).getIpAddress(), 
+//				 Globals.DESTINATION_MAC_ADDRESS, true, true);
+//			
+//		// Receiving SYN packet to destination router
+//		hasError = sourceRouter.receiveTcpPacket(bitArrayHdlc, true, true);
+//		
+//		if(!hasError) {
+//			System.out.println("[R1 -> R2]");
+//			System.out.println("Sending ACK packet");
+//			bitArrayHdlc = sourceRouter.sendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 1, 1, sourceRouter.getEnabledInterfaces().get(1).getIpAddress(),  //HARDCODED FOR NOW, WAITING FOR NEIGHBOR TABLE
+//					 destinationRouter.getEnabledInterfaces().get(2).getIpAddress(), 
+//					 Globals.DESTINATION_MAC_ADDRESS, false, true);
+//				
+//				// Receiving SYN packet to destination router
+//				hasError = destinationRouter.receiveTcpPacket(bitArrayHdlc, false, true);
+//				
+//				if(!hasError) {
+//					System.out.println("[R1 <-> R2]");
+//					System.out.println("Connection established!");
+//				}
+//		}
+//	}
+//}

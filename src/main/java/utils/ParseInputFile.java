@@ -14,6 +14,8 @@ import components.Globals;
 import components.Router;
 import components.RouterInterface;
 
+import static components.Globals.linkMap;
+
 public class ParseInputFile {
 
 	static String FILENAME = "inputs.json";
@@ -21,13 +23,14 @@ public class ParseInputFile {
 
 	public void parseRouterInterfaces() throws IOException {
 		content = new String(Files.readAllBytes(Paths.get(FILENAME)), StandardCharsets.UTF_8);
-		Globals.routers = new ArrayList<Router>();
+		Globals.routers = new ArrayList<>();
 
 		JSONObject obj = new JSONObject(content);
 		JSONArray routersArr = obj.getJSONArray("routers");
 		
 		for(int i = 0; i < routersArr.length(); i++) {
 			String name = routersArr.getJSONObject(i).getString("name");
+			Globals.routerNames.add(name);
 			ArrayList<RouterInterface> interfaces = new ArrayList<RouterInterface>();
 			JSONArray interfacesArr = routersArr.getJSONObject(i).getJSONArray("interfaces");
 			Router router = new Router(name);
@@ -51,7 +54,7 @@ public class ParseInputFile {
 		
 		JSONObject obj = new JSONObject(content);
 		JSONObject links = obj.getJSONObject("links");
-		Map<String, Object> linkMap = links.toMap();
+		linkMap = links.toMap();
 		Map<Object, String> reverseLinkMap = IpFunctions.reverseMap(linkMap);
 
 		for(Router r : Globals.routers) {

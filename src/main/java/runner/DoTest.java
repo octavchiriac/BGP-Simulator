@@ -1,96 +1,117 @@
 package runner;
 
 import java.io.IOException;
+import java.util.AbstractMap;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
+import java.util.concurrent.Semaphore;
 
-import multithread.SendPktTask;
-import multithread.ThreadPool;
 import components.Globals;
-import packets.HdlcPacket;
-import packets.IpPacket;
-import packets.Packet;
-import packets.TcpPacket;
+import components.NeighborTable;
+import components.Router;
+import multithread.SendTcpPacket;
+import multithread.ThreadPool;
 import utils.ParseInputFile;
+
+import static components.Globals.linkMap;
+import static components.Globals.routers;
 
 public class DoTest {
 
-    public static void main(String[] args) throws IOException {
+    private static void establishTcpConnection(String ipAddress1, String ipAddress2) throws InterruptedException {
 
-        // TEST PARSING INPUT FILE
+            // Send SYN message
+            SendTcpPacket task = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0,
+                    ipAddress1, ipAddress2, Globals.DESTINATION_MAC_ADDRESS, true, false);
+            ThreadPool.submit(task);
+
+            Thread.sleep(1000);
+
+            // Send SYN + ACK message
+            task = new SendTcpPacket(Globals.TCP_PORT, Globals.UDP_PORT, 0, 1,
+                    ipAddress2, ipAddress1, Globals.DESTINATION_MAC_ADDRESS, true, true);
+            ThreadPool.submit(task);
+
+            Thread.sleep(1000);
+
+            // Send ACK message
+            task = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 1, 1,
+                    ipAddress1, ipAddress2, Globals.DESTINATION_MAC_ADDRESS, false, true);
+            ThreadPool.submit(task);
+
+            Thread.sleep(1000);
+
+            Router r1 = Router.getRouterByIP(ipAddress1);
+            Router r2 = Router.getRouterByIP(ipAddress2);
+
+            r1.addTcpConnectedRouter(r2);
+            r2.addTcpConnectedRouter(r1);
+    }
+
+    private static void changeRouterStateFromInput() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter router to be shut down followed by desired state: ");
+        boolean wrongInput = true;
+        while(wrongInput) {
+            String line = input.nextLine();
+            if(line.equals("exit")) {
+                wrongInput = false;
+            } else {
+                String routerName = line.split(" ")[0];
+                boolean routerState = line.split(" ")[1]
+                        .equalsIgnoreCase("enabled") ? true : false;
+
+                if (Globals.routerNames.contains(routerName)) {
+                    wrongInput = false;
+                    Router r = Router.getRouterByName(routerName);
+                    r.setEnabled(routerState);
+                }
+            }
+
+            if(wrongInput)
+                System.err.println("No router found with this name. Please try again or type \"exit\" to skip");
+        }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+
+        // Parse input file
         ParseInputFile parseInput = new ParseInputFile();
         parseInput.parseRouterInterfaces();
         parseInput.parseDirectLinks();
+//
+//        for (int i = 0; i < 3; i++) {
+//            Globals.routers.get(i).printRouterInfo();
+//        }
 
-        for (int i = 0; i < 3; i++) {
-            Globals.routers.get(i).printRouterInfo();
-        }
 
-        // ROUTERS NEED TO BE RUN AT STARTUP AFTER FILE PARSING
-        for (Router r : Globals.routers) {
+        // Start up routers
+        for (Router r : routers) {
             Thread t = new Thread(r);
             t.start();
         }
 
-        // TEST SENDING MESSAGE THROUGH LAYERS
-        String sourceAddress = "1.7.255.128";
-        String destinationAddress = "10.1.0.3";
+        // Wait for routers to finish "cold start"
+        while (Globals.nrRoutersStarted != routers.size()) {
+            Thread.sleep(1000);
+        }
 
-        Packet tcpPacket = new TcpPacket(1027, 179, 7, 7, 7, 7, false, false, false, false, true, true, 0, 0, 0, "MUIE 123 MUMU23");
-        String bitArrayTcp = tcpPacket.packetToBitArray();
-
-        Packet ipPacket = new IpPacket(4, 5, 0, 15, 3, false, false, true, 0, 255, 6, 7, sourceAddress, destinationAddress, bitArrayTcp);
-        String bitArrayIp = ipPacket.packetToBitArray();
-
-        Packet hdlcPacket = new HdlcPacket("01111110", "11111111", "00000000", bitArrayIp, "00000000");
-        String bitArrayHdlc = hdlcPacket.packetToBitArray();
-
-        Packet hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
-
-        Packet ipPacket2 = new IpPacket(hdlcPacket2.getData());
-
-        Packet tcpPacket2 = new TcpPacket(ipPacket2.getData());
-
-        System.out.println(tcpPacket2.getData());
-
-        // Test thread pool
-        SendPktTask task1 = new SendPktTask(hdlcPacket2.packetToBitArray(), "100.1.2.3");
-
-        destinationAddress = "100.1.2.1";
-        tcpPacket = new TcpPacket(1027, 179, 7, 7, 7, 7, false, false, false, false, true, true, 0, 0, 0, "MUIE 123 MUMU23");
-        bitArrayTcp = tcpPacket.packetToBitArray();
-        ipPacket = new IpPacket(4, 5, 0, 15, 3, false, false, true, 0, 255, 6, 7, sourceAddress, destinationAddress, bitArrayTcp);
-        bitArrayIp = ipPacket.packetToBitArray();
-        hdlcPacket = new HdlcPacket("01111110", "11111111", "00000000", bitArrayIp, "00000000");
-        bitArrayHdlc = hdlcPacket.packetToBitArray();
-        hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
-
-        SendPktTask task2 = new SendPktTask(hdlcPacket2.packetToBitArray(), "100.1.2.1");
-
-        destinationAddress = "10.0.0.2";
-        tcpPacket = new TcpPacket(1027, 179, 7, 7, 7, 7, false, false, false, false, true, true, 0, 0, 0, "MUIE 123 MUMU23");
-        bitArrayTcp = tcpPacket.packetToBitArray();
-        ipPacket = new IpPacket(4, 5, 0, 15, 3, false, false, true, 0, 255, 6, 7, sourceAddress, destinationAddress, bitArrayTcp);
-        bitArrayIp = ipPacket.packetToBitArray();
-        hdlcPacket = new HdlcPacket("01111110", "11111111", "00000000", bitArrayIp, "00000000");
-        bitArrayHdlc = hdlcPacket.packetToBitArray();
-        hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
-
-        SendPktTask task3 = new SendPktTask(hdlcPacket2.packetToBitArray(), "10.0.0.2");
-
-        destinationAddress = "10.1.50.4";
-        tcpPacket = new TcpPacket(1027, 179, 7, 7, 7, 7, false, false, false, false, true, true, 0, 0, 0, "MUIE 123 MUMU23");
-        bitArrayTcp = tcpPacket.packetToBitArray();
-        ipPacket = new IpPacket(4, 5, 0, 15, 3, false, false, true, 0, 255, 6, 7, sourceAddress, destinationAddress, bitArrayTcp);
-        bitArrayIp = ipPacket.packetToBitArray();
-        hdlcPacket = new HdlcPacket("01111110", "11111111", "00000000", bitArrayIp, "00000000");
-        bitArrayHdlc = hdlcPacket.packetToBitArray();
-        hdlcPacket2 = new HdlcPacket(bitArrayHdlc);
-
-        SendPktTask task4 = new SendPktTask(hdlcPacket2.packetToBitArray(), "10.1.50.4");
+        // Establish TCP connections for every direct link in the neighbor table in parallel
         ThreadPool.run();
 
-        ThreadPool.submit(task1);
-        ThreadPool.submit(task2);
-        ThreadPool.submit(task3);
-        ThreadPool.submit(task4);
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            try {
+                establishTcpConnection(entry.getKey(), (String) entry.getValue());
+            } catch (InterruptedException e) {
+                System.err.println(e.getMessage());
+            }
+        });
+
+        ThreadPool.stop();
+
+        // Select router to be shut down
+        changeRouterStateFromInput();
+
     }
 }

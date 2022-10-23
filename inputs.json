@@ -13,7 +13,7 @@
 					"name" : "fa0/2",
 					"ipAddress" : "10.1.0.4",
 					"subnetMask" : "255.255.255.0",
-					"as" : "200"
+					"as" : "100"
 				},
 			]
 		},
@@ -23,21 +23,15 @@
 				{
 					"name" : "fa0/1",
 					"ipAddress" : "100.1.2.1",
-					"subnetMask" : "255.0.0.0",
-					"as" : "300"
+					"subnetMask" : "255.255.255.0",
+					"as" : "200"
 				},
 				{
 					"name" : "fa0/2",
 					"ipAddress" : "10.1.0.2",
-					"subnetMask" : "255.0.0.0",
+					"subnetMask" : "255.255.255.0",
 					"as" : "200"
-				},
-				{
-					"name" : "fa0/3",
-					"ipAddress" : "10.1.0.3",
-					"subnetMask" : "255.0.0.0",
-					"as" : "400"
-				},
+				}
 			]
 		},
 		{
@@ -46,21 +40,15 @@
 				{
 					"name" : "fa0/1",
 					"ipAddress" : "10.0.0.2",
-					"subnetMask" : "255.255.0.0",
-					"as" : "100"
+					"subnetMask" : "255.255.255.0",
+					"as" : "300"
 				},
 				{
 					"name" : "fa0/2",
-					"ipAddress" : "100.1.2.2",
-					"subnetMask" : "255.255.0.0",
-					"as" : "500"
-				},
-				{
-					"name" : "fa0/3",
 					"ipAddress" : "100.1.2.3",
-					"subnetMask" : "255.255.0.0",
+					"subnetMask" : "255.255.255.0",
 					"as" : "300"
-				},
+				}
 			]
 		},
 	],
