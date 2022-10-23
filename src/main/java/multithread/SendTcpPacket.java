@@ -8,6 +8,8 @@ import packets.IpPacket;
 import packets.Packet;
 import packets.TcpPacket;
 
+import static components.Router.getRouterByIP;
+
 public class SendTcpPacket implements Runnable{
 
 	int sourcePort;
@@ -59,17 +61,6 @@ public class SendTcpPacket implements Runnable{
 	        
 	        return hdlcPacket.packetToBitArray();
 		}
-	 
-	 private static Router getRouterByIP(String ip) {
-	        for (Router r : Globals.routers) {
-	            for (RouterInterface i : r.getEnabledInterfaces()) {
-	                if (i.getIpAddress().equals(ip)) {
-	                    return r;
-	                }
-	            }
-	        }
-	        return null;
-	    }
 
 	@Override
 	public void run() {

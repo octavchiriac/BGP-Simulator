@@ -96,6 +96,8 @@ public class TcpPacket extends Packet{
 		return syn;
 	}
 
+	public boolean isPsh() { return psh; }
+
 	@Override
 	public String toString() {
 		return "TcpPacket{" +

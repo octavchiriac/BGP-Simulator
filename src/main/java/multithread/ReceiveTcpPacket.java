@@ -8,6 +8,8 @@ import packets.IpPacket;
 import packets.Packet;
 import packets.TcpPacket;
 
+import static components.Router.getRouterByIP;
+
 public class ReceiveTcpPacket implements Runnable {
 	String bitArrayHdlc;
 
@@ -16,17 +18,6 @@ public class ReceiveTcpPacket implements Runnable {
 		super();
 		this.bitArrayHdlc = bitArrayHdlc;
 	}
-	
-	private static Router getRouterByIP(String ip) {
-        for (Router r : Globals.routers) {
-            for (RouterInterface i : r.getEnabledInterfaces()) {
-                if (i.getIpAddress().equals(ip)) {
-                    return r;
-                }
-            }
-        }
-        return null;
-    }
 	
 	public void receiveTcpPacket(String bitArrayHdlc) throws Exception {
 		boolean isFound = false;

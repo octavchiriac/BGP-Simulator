@@ -14,14 +14,17 @@ public class Router implements Runnable {
     public ArrayList<RouterInterface> interfaces;
     public boolean isEnabled;
     public RoutingTableEntry routingTable;
-    private BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
+    private BlockingQueue<String> queue ;
     NeighborTable neighborTable;
+    ArrayList<Router> tcpConnectedRouters;
 
     public Router(String name) {
         super();
         this.name = name;
-        this.isEnabled = false; // TODO Implement enable/disable router
+        this.isEnabled = false;
         this.neighborTable = new NeighborTable();
+        this.queue = new LinkedBlockingQueue<>();
+        this.tcpConnectedRouters = new ArrayList<>();
     }
 
     public String getName() {
@@ -46,6 +49,7 @@ public class Router implements Runnable {
 
     public void setEnabled(boolean isEnabled) {
         this.isEnabled = isEnabled;
+        System.out.println("[" + name  + "] Router state : " + (isEnabled? "Enabled" : "Disabled"));
     }
 
     public RoutingTableEntry getRoutingTable() {
@@ -60,11 +64,48 @@ public class Router implements Runnable {
 		return neighborTable;
 	}
 
-	private static RouterInterface getRouterInterfaceByIP(String ip) {
+    public ArrayList<Router> getTcpConnectedRouters() {
+        return tcpConnectedRouters;
+    }
+
+    public void printTcpConnectedRouters() {
+        System.out.print("[" + name  + "] TCP Connected routers : { ");
+        for(Router r : tcpConnectedRouters) {
+            System.out.print(r.getName() + " ");
+        }
+        System.out.println("}");
+    }
+
+    public void addTcpConnectedRouter(Router r) {
+        this.tcpConnectedRouters.add(r);
+    }
+
+    public static RouterInterface getRouterInterfaceByIP(String ip) {
         for (Router r : Globals.routers) {
             for (RouterInterface i : r.getEnabledInterfaces()) {
                 if (i.getIpAddress().equals(ip)) {
                     return i;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Router getRouterByIP(String ip) {
+        for (Router r : Globals.routers) {
+            for (RouterInterface i : r.getEnabledInterfaces()) {
+                if (i.getIpAddress().equals(ip)) {
+                    return r;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Router getRouterByName(String name) {
+        for (Router r : Globals.routers) {{
+                if (r.getName().equals(name)) {
+                    return r;
                 }
             }
         }
@@ -147,6 +188,11 @@ public class Router implements Runnable {
         // Listening for incoming messages
         while (isEnabled) {
             try {
+//                for(Router r : this.getTcpConnectedRouters()) {
+//                    System.out.println("[" + name + " -> " + r.getName() + "] KEEPALIVE");
+//                    Thread.sleep(5000);
+//                }
+
                 String msg;
                 while ((msg = queue.poll()) != null) {
 
@@ -155,7 +201,7 @@ public class Router implements Runnable {
                     ThreadPool.submit(task);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println(e.getMessage());
             }
         }
     }
