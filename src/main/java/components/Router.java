@@ -18,7 +18,8 @@ public class Router implements Runnable {
     private ArrayList<RouterInterface> interfaces;
     private boolean isEnabled;
     private boolean isRestarted;
-    private RoutingTableEntry routingTable;
+    //private RoutingTableEntry routingTable;
+    public  BGPRoutingTable routingTable;
     private BlockingQueue<String> queue ;
     private NeighborTable neighborTable;
     private ArrayList<Router> tcpConnectedRouters;
@@ -31,6 +32,7 @@ public class Router implements Runnable {
         this.neighborTable = new NeighborTable();
         this.queue = new LinkedBlockingQueue<>();
         this.tcpConnectedRouters = new ArrayList<>();
+        this.routingTable=new BGPRoutingTable();
     }
 
     public String getName() {
@@ -73,12 +75,19 @@ public class Router implements Runnable {
         this.tcpConnectedRouters = new ArrayList<>();
     }
 
-    public RoutingTableEntry getRoutingTable() {
+    public BGPRoutingTable getRoutingTable() {
         return routingTable;
     }
 
-    public void setRoutingTable(RoutingTableEntry routingTable) {
-        this.routingTable = routingTable;
+    public void insertInRoutingTable(String localRouterId, int localASNumber, String paths, int routeDuration, String advertisedRouterId, String nextHop, String outInterface, String pathAS) {
+        //TODO: check the parameters
+        routingTable.setBGPRoutingTable(localRouterId, localASNumber, paths, routeDuration, advertisedRouterId, nextHop, outInterface, pathAS);
+    }
+
+    //function to insert values inside the routing table based on the neighbor table
+    public void insertFromNeighbour() {
+        if(neighborTable!=null)
+            routingTable.setFromNeighbour(neighborTable);
     }
     
     public NeighborTable getNeighborTable() {

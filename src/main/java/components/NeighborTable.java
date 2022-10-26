@@ -39,6 +39,10 @@ public class NeighborTable {
 		return neighborsIp;
 	}
 
+	public ArrayList<String> getNeighborsAs() {
+		return neighborsAs;
+	}
+
 
 	@Override
 	public String toString() {

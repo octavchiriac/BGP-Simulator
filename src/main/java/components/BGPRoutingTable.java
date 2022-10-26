@@ -1,5 +1,7 @@
 package components;
 
+import java.util.ArrayList;
+
 public class BGPRoutingTable {
 /*
  * "BGP Routing Table – table containing information about the best path to each destination network"
@@ -19,8 +21,19 @@ public class BGPRoutingTable {
     public String outInterface; //Outbound interface of the route to which the BGP route is iterated.
     public String pathAS;
 
-    public BGPRoutingTable(String localRouterId, int localASNumber, String paths, int routeDuration, String advertisedRouterId, String nextHop, String outInterface, String pathAS) {
+    public BGPRoutingTable() {
         super();
+
+    }
+    public void setFromNeighbour(NeighborTable neighborTable) {
+        ArrayList<String> neighborsIp = neighborTable.getNeighborsIp();
+        ArrayList<String> neighborsAs = neighborTable.getNeighborsAs();
+
+        for(int i = 0; i < neighborsIp.size(); i++) {
+            //TODO: fill the values based on the neighborTable
+        }
+    }
+    public void setBGPRoutingTable(String localRouterId, int localASNumber, String paths, int routeDuration, String advertisedRouterId, String nextHop, String outInterface, String pathAS){
         this.localRouterId = localRouterId;
         this.localASNumber = localASNumber;
         this.paths = paths;
@@ -29,9 +42,7 @@ public class BGPRoutingTable {
         this.nextHop = nextHop;
         this.outInterface = outInterface;
         this.pathAS = pathAS;
-
     }
-
     public int getLocalASNumber() {
         return localASNumber;
     }
