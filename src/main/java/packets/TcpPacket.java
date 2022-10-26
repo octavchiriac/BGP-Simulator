@@ -88,15 +88,15 @@ public class TcpPacket extends Packet{
 		return destinationPort;
 	}
 
-	public boolean isAck() {
-		return ack;
-	}
+	public boolean isAck() { return ack; }
 
 	public boolean isSyn() {
 		return syn;
 	}
 
 	public boolean isPsh() { return psh; }
+
+	public boolean isRst() { return rst; }
 
 	@Override
 	public String toString() {

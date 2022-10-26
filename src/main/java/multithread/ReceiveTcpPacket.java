@@ -9,6 +9,7 @@ import packets.Packet;
 import packets.TcpPacket;
 
 import static components.Router.getRouterByIP;
+import static runner.DoTest.establishTcpConnection;
 
 public class ReceiveTcpPacket implements Runnable {
 	String bitArrayHdlc;
@@ -58,15 +59,25 @@ public class ReceiveTcpPacket implements Runnable {
 	    		Packet hdlcPacket = new HdlcPacket("01111110", Globals.DESTINATION_MAC_ADDRESS, "00000000", ipPacket2.packetToBitArray(), "00000000");
 	    		
 	    		SendTcpPacket task = new SendTcpPacket(hdlcPacket.packetToBitArray(), ipPacket2.getSourceAddress(), 
-	    				ipPacket2.getDestinationAddress(), tcpPacket2.isSyn(), tcpPacket2.isAck());
+	    				ipPacket2.getDestinationAddress(), tcpPacket2.isSyn(), tcpPacket2.isAck(),
+						tcpPacket2.isPsh(), tcpPacket2.isRst(), tcpPacket2.getData());
 	    		ThreadPool.submit(task);
 	
 	    	} else {
 	    		 if(tcpPacket2.isSyn() && tcpPacket2.isAck()) {
-	         		System.out.println("[" + srcRouterName + " -> " + destRouterName + "] SYN + ACK packet sucessfully received on interface " + interfaceName);
-	 	        } else if(tcpPacket2.isSyn()) {
+					 System.out.println("[" + srcRouterName + " -> " + destRouterName + "] SYN + ACK packet sucessfully received on interface " + interfaceName);
+				 } else if(tcpPacket2.isPsh() && tcpPacket2.isAck()) {
+						 System.out.println("[" + srcRouterName + " -> " + destRouterName + "] PSH + ACK packet sucessfully received on interface " + interfaceName);
+				 } else if(tcpPacket2.isSyn()) {
 	        		System.out.println("[" + srcRouterName + " -> " + destRouterName + "] SYN packet sucessfully received on interface " + interfaceName);
-		        } else if(tcpPacket2.isAck()) {
+		         } else if(tcpPacket2.isRst()) {
+					 System.out.println("[" + srcRouterName + " -> " + destRouterName + "] RST packet sucessfully received on interface " + interfaceName);
+					 try {
+						 establishTcpConnection(destinationIpAddress, sourceIpAddress);
+					 } catch (InterruptedException e) {
+						 System.err.println(e.getMessage());
+					 }
+				 } else if(tcpPacket2.isAck()) {
 		        	System.out.println("[" + srcRouterName + " -> " + destRouterName + "] ACK packet sucessfully received on interface " + interfaceName);
 		        	
 		        	System.out.println("[" + srcRouterName + " -> " + destRouterName + "] TCP connection established!");
