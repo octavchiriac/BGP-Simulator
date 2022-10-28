@@ -126,9 +126,11 @@ public class DoTest {
         // Select router to change state
         Router restartedRouter = changeRouterStateFromInput();
 
+
         if (restartedRouter != null) {
-            // Repopulate neighbor table for restarted router
-            restartedRouter.populateNeighborTable();
+            // Restart router thread
+            Thread t = new Thread(restartedRouter);
+            t.start();
 
             // Send RST message to previously connected routers
             linkMap.entrySet().parallelStream().forEach(entry -> {
@@ -140,10 +142,6 @@ public class DoTest {
                 }
             });
         }
-
-        //TODO find a way to reintroduce restarted router in the while loop from Router.run()
-
-
 
 //        ThreadPool.stop();
     }

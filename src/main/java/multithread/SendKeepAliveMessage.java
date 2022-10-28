@@ -34,7 +34,7 @@ public class SendKeepAliveMessage implements Runnable{
                         ThreadPool.submit(task2);
                     }
 
-                    Thread.sleep(40000);
+                    Thread.sleep(25000);
                 }
             } catch (InterruptedException e) {
                 System.err.println(e.getMessage());
