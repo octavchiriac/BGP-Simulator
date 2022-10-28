@@ -24,5 +24,4 @@ public class NLRI {
         return "{"+length + "; " + prefix+"}";
     }
 
-
 }
