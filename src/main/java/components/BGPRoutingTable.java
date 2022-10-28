@@ -30,7 +30,7 @@ public class BGPRoutingTable {
         ArrayList<String> neighborsAs = neighborTable.getNeighborsAs();
 
         for(int i = 0; i < neighborsIp.size(); i++) {
-            //TODO: fill the values based on the neighborTable
+            //TODO: fill the values based on the neighborTable, search for the ip address based on the neighbour
         }
     }
     public void setBGPRoutingTable(String localRouterId, int localASNumber, String paths, int routeDuration, String advertisedRouterId, String nextHop, String outInterface, String pathAS){

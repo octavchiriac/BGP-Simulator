@@ -10,37 +10,15 @@ import java.util.ArrayList;
  */
 public class TopologyTable{
 
-	public String prefix; //Prefix of the route.
-	public int prefixLength; //Prefix length of the route.
-	public String advertisedRouterId; //IP address of the device that advertised the route.
-	public ArrayList<Route> listRIB; //BGP Routing Information Base (RIB) – a table containing information about the bst path to each destination network.
-	public ArrayList<NLRI> listNLRI;
+	public String destinationIp;
+	public String nextHop;
+	public String metric;
+	public ArrayList<String> pathAS;
+
+	//public ArrayList<String> listRIB; //stores all the possible paths
 
 	public TopologyTable(){
 		super();
-		listRIB = new ArrayList<Route>();
-		listNLRI= new ArrayList<NLRI>();
-	}
-
-	//NEXT-HOP for NLRI is added according to the route in the RIB.
-	public void addNextHopNLRI(String length, String destinationAddress){
-		String nextHop=listRIB.get(listRIB.indexOf(destinationAddress)).getNextHop();
-		listNLRI.add(new NLRI(length,nextHop));
-	}
-
-	public void addRoute(Route route){
-		listRIB.add(route);
-	}
-
-	public void removeRoute(Route route){
-		listRIB.remove(route);
-	}
-
-	public void editRoute(Route route){
-		listRIB.set(listRIB.indexOf(route), route);
-	}
-	public ArrayList<Route> getRIB(){
-		return listRIB;
 	}
 
 
