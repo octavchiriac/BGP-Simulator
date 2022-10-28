@@ -2,7 +2,7 @@ package components.tblentries;
 
 public class PathAttributes {
 
-    private String ORIGIN;
+    private  String ORIGIN;
     private String AS_PATH;
     private String NEXT_HOP;
     private String MULTI_EXIT_DISC;
@@ -10,6 +10,7 @@ public class PathAttributes {
     private String ATOMIC_AGGREGATE;
     private String AGGREGATOR;
 
+    // TODO: OPTIONAL ATTRIBUTES
     public PathAttributes(String ORIGIN, String AS_PATH, String NEXT_HOP, String MULTI_EXIT_DISC, String LOCAL_PREF, String ATOMIC_AGGREGATE, String AGGREGATOR) {
         this.ORIGIN = ORIGIN;
         this.AS_PATH = AS_PATH;
