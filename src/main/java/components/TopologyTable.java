@@ -10,17 +10,24 @@ import java.util.ArrayList;
  */
 public class TopologyTable{
 
-	public String destinationIp;
-	public String nextHop;
-	public String metric;
-	public ArrayList<String> pathAS;
-
-	//public ArrayList<String> listRIB; //stores all the possible paths
+	public ArrayList<TopologyTableEntry> listRIB; //stores all the possible paths
 
 	public TopologyTable(){
 		super();
+		listRIB = new ArrayList<TopologyTableEntry>();
 	}
 
+	public void insertNewEntry(String destinationIp, String nextHop, String metric, ArrayList<String> pathAS){
+		listRIB.add(new TopologyTableEntry(destinationIp, nextHop, metric, pathAS));
+	}
+
+	public void insertNewEntry(TopologyTableEntry entry){
+		listRIB.add(entry);
+	}
+
+	public void removeEntry(TopologyTableEntry entry){
+		listRIB.remove(entry);
+	}
 
 	@Override
 	public String toString() {
