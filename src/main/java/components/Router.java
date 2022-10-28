@@ -81,13 +81,12 @@ public class Router implements Runnable {
 
     public void insertInRoutingTable(String localRouterId, int localASNumber, String paths, int routeDuration, String advertisedRouterId, String nextHop, String outInterface, String pathAS) {
         //TODO: check the parameters
-        routingTable.setBGPRoutingTable(localRouterId, localASNumber, paths, routeDuration, advertisedRouterId, nextHop, outInterface, pathAS);
+        //routingTable.setBGPRoutingTable(localRouterId, localASNumber, paths, routeDuration, advertisedRouterId, nextHop, outInterface, pathAS);
     }
 
     //function to insert values inside the routing table based on the neighbor table
     public void insertFromNeighbour() {
-        if(neighborTable!=null)
-            routingTable.setFromNeighbour(neighborTable);
+        //if(neighborTable!=null) routingTable.setFromNeighbour(neighborTable);
     }
     
     public NeighborTable getNeighborTable() {

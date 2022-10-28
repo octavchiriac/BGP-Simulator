@@ -29,6 +29,10 @@ public class TopologyTable{
 		listRIB.remove(entry);
 	}
 
+	public ArrayList<TopologyTableEntry> getListRIB() {
+		return listRIB;
+	}
+
 	@Override
 	public String toString() {
 		return "BGPTable{" + '}';
