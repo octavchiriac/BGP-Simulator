@@ -14,6 +14,7 @@ import static runner.DoTest.establishTcpConnection;
 
 public class Router implements Runnable {
 
+    private final long id;
     private String name;
     private ArrayList<RouterInterface> interfaces;
     private boolean isEnabled;
@@ -25,12 +26,17 @@ public class Router implements Runnable {
 
     public Router(String name) {
         super();
+        this.id = (long) Math.abs(System.currentTimeMillis() % Math.pow(10, 10));
         this.name = name;
         this.isEnabled = false;
         this.isRestarted = false;
         this.neighborTable = new NeighborTable();
         this.queue = new LinkedBlockingQueue<>();
         this.tcpConnectedRouters = new ArrayList<>();
+    }
+
+    public long getId() {
+        return id;
     }
 
     public String getName() {
@@ -62,15 +68,39 @@ public class Router implements Runnable {
 
         if (isEnabled) {
             restartRouter();
+        } else {
+            // Change BGP states to Active after router is disabled
+            for (RouterInterface inter : this.getInterfaces()) {
+                inter.setState(BGPStates.Active);
+
+                //change state for interface that is connected to this one through direct link
+                for (Router r: this.getTcpConnectedRouters()) {
+                    RouterInterface connInter = r.getRouterInterfaceByIP(inter.getDirectLink());
+                    connInter.setState(BGPStates.Active);
+                }
+            }
         }
         System.out.println("[" + name  + "] Router state : " + (isEnabled? "Enabled" : "Disabled"));
     }
 
     private void restartRouter() {
+
+        // Change BGP states to Idle after router is restarted
+        for (RouterInterface inter : this.getInterfaces()) {
+            inter.setState(BGPStates.Idle);
+
+            // Change BGP states of connected routers to Idle after router is restarted
+            for (Router r : this.getTcpConnectedRouters()) {
+                RouterInterface connInter = r.getRouterInterfaceByIP(inter.getDirectLink());
+                connInter.setState(BGPStates.Connect);
+            }
+        }
+
         this.isRestarted = true;
         this.neighborTable = new NeighborTable();
         this.queue = new LinkedBlockingQueue<>();
         this.tcpConnectedRouters = new ArrayList<>();
+        this.changeAllInterfacesBGPState(BGPStates.Idle);
     }
 
     public RoutingTableEntry getRoutingTable() {
@@ -112,6 +142,12 @@ public class Router implements Runnable {
         return null;
     }
 
+    public void changeAllInterfacesBGPState (BGPStates state) {
+        for (RouterInterface i : this.getInterfaces()) {
+            i.setState(state);
+        }
+    }
+
     public static Router getRouterByIP(String ip) {
         for (Router r : routers) {
             for (RouterInterface i : r.getEnabledInterfaces()) {
@@ -136,7 +172,7 @@ public class Router implements Runnable {
     public ArrayList<RouterInterface> getEnabledInterfaces() {
         ArrayList<RouterInterface> enabledInterfaces = new ArrayList<RouterInterface>();
         for (RouterInterface i : interfaces) {
-            if (i.isUp) {
+            if (i.isUp()) {
                 enabledInterfaces.add(i);
             }
         }
@@ -146,7 +182,7 @@ public class Router implements Runnable {
     public ArrayList<String> getEnabledInterfacesAddresses() {
         ArrayList<String> enabledInterfaces = new ArrayList<String>();
         for (RouterInterface i : interfaces) {
-            if (i.isUp) {
+            if (i.isUp()) {
                 enabledInterfaces.add(i.getIpAddress());
             }
         }
@@ -166,7 +202,10 @@ public class Router implements Runnable {
    
     public void populateNeighborTable () {
 		for(RouterInterface i : this.getInterfaces()) {
-			
+
+            // Change BGP state to Connect
+            i.setState(BGPStates.Connect);
+
 			if(i.getDirectLink() != null) {
 				RouterInterface neighborRouter = getRouterInterfaceByIP(i.getDirectLink());
 				
@@ -181,7 +220,8 @@ public class Router implements Runnable {
     }
 
     public void printRouterInfo() {
-        System.out.println(this.getName());
+        System.out.println(this.getName() + " " + this.getId());
+
         for (RouterInterface inte : this.getInterfaces()) {
             System.out.println("Interface Name: " + inte.getName());
             System.out.println("IpAddress: " + inte.getIpAddress());

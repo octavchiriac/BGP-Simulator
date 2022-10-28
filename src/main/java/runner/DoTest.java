@@ -8,9 +8,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Semaphore;
 import java.util.stream.IntStream;
 
-import components.Globals;
-import components.NeighborTable;
-import components.Router;
+import components.*;
 import multithread.SendKeepAliveMessage;
 import multithread.SendTcpPacket;
 import multithread.ThreadPool;
@@ -24,6 +22,16 @@ import static java.util.stream.Collectors.toList;
 public class DoTest {
 
     public static void establishTcpConnection(String ipAddress1, String ipAddress2) throws InterruptedException {
+        Router r1 = Router.getRouterByIP(ipAddress1);
+        RouterInterface i1 = r1.getRouterInterfaceByIP(ipAddress1);
+        System.out.println(r1.getName() + "######################" + i1.getState());
+
+        Router r2 = Router.getRouterByIP(ipAddress2);
+        RouterInterface i2 = r2.getRouterInterfaceByIP(ipAddress2);
+        System.out.println(r2.getName() + "######################" + i2.getState());
+
+
+        if(i1.getState().equals(BGPStates.Connect) && i2.getState().equals(BGPStates.Connect)) {
             // Send SYN message
             SendTcpPacket task = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0,
                     ipAddress1, ipAddress2, Globals.DESTINATION_MAC_ADDRESS, true, false, false, false, "");
@@ -33,7 +41,7 @@ public class DoTest {
 
             // Send SYN + ACK message
             task = new SendTcpPacket(Globals.TCP_PORT, Globals.UDP_PORT, 0, 1,
-                    ipAddress2, ipAddress1, Globals.DESTINATION_MAC_ADDRESS, true, true, false, false,  "");
+                    ipAddress2, ipAddress1, Globals.DESTINATION_MAC_ADDRESS, true, true, false, false, "");
             ThreadPool.submit(task);
 
             Thread.sleep(1000);
@@ -45,11 +53,13 @@ public class DoTest {
 
             Thread.sleep(1000);
 
-            Router r1 = Router.getRouterByIP(ipAddress1);
-            Router r2 = Router.getRouterByIP(ipAddress2);
-
             r1.addTcpConnectedRouter(r2);
             r2.addTcpConnectedRouter(r1);
+
+            // Change BGP state to OpenSent
+            i1.setState(BGPStates.OpenSent);
+            i2.setState(BGPStates.OpenSent);
+        }
     }
 
     private static Router changeRouterStateFromInput() throws InterruptedException {
@@ -87,7 +97,7 @@ public class DoTest {
         ParseInputFile parseInput = new ParseInputFile();
         parseInput.parseRouterInterfaces();
         parseInput.parseDirectLinks();
-//
+
 //        for (int i = 0; i < 3; i++) {
 //            Globals.routers.get(i).printRouterInfo();
 //        }
@@ -131,6 +141,8 @@ public class DoTest {
             // Restart router thread
             Thread t = new Thread(restartedRouter);
             t.start();
+
+            Thread.sleep(1000);
 
             // Send RST message to previously connected routers
             linkMap.entrySet().parallelStream().forEach(entry -> {
