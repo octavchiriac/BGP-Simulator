@@ -14,6 +14,8 @@ public class BinaryFunctions {
 		
 		if(type.toString().contains("Integer")) {
 			obj = Integer.parseInt(subst, 2);
+		} else if(type.toString().contains("Long")) {
+			obj = Long.parseLong(subst, 2);
 		} else if(type.toString().contains("Boolean")) {
 			obj = subst.equals("1") ? true : false;
 		} else if(type.toString().contains("Address")){
@@ -32,6 +34,9 @@ public class BinaryFunctions {
 		} else if (input instanceof Integer) {
 			bitsArray += String.format("%" + size + "s", Integer.toBinaryString((int) input))
 					.replace(' ','0');
+		} else if (input instanceof Long) {
+		bitsArray += String.format("%" + size + "s", Long.toBinaryString((long) input))
+				.replace(' ','0');
 		} else {
 			if(input.toString().contains(".")) {
 				bitsArray += convertIpToBinary((String) input);
