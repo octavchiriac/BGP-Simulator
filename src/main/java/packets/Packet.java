@@ -11,7 +11,7 @@ public abstract class Packet {
 		return data;
 	}
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 

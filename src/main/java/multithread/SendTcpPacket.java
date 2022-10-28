@@ -81,8 +81,10 @@ public class SendTcpPacket implements Runnable{
         
         if(isSyn && isAck) {
         	packetType = "SYN + ACK";
+		} else if (isPsh && isAck && data.length() == 0) {
+			packetType = "KEEPALIVE";
 		} else if (isPsh && isAck) {
-			packetType = "PSH + ACK";
+			packetType = "OPEN";
         } else if(isAck) {
         	packetType = "ACK";
         } else if (isSyn) {

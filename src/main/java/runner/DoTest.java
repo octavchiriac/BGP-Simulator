@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 
 import components.*;
 import multithread.SendKeepAliveMessage;
+import multithread.SendOpenMessage;
 import multithread.SendTcpPacket;
 import multithread.ThreadPool;
 import utils.ParseInputFile;
@@ -24,14 +25,14 @@ public class DoTest {
     public static void establishTcpConnection(String ipAddress1, String ipAddress2) throws InterruptedException {
         Router r1 = Router.getRouterByIP(ipAddress1);
         RouterInterface i1 = r1.getRouterInterfaceByIP(ipAddress1);
-        System.out.println(r1.getName() + "######################" + i1.getState());
 
         Router r2 = Router.getRouterByIP(ipAddress2);
         RouterInterface i2 = r2.getRouterInterfaceByIP(ipAddress2);
-        System.out.println(r2.getName() + "######################" + i2.getState());
 
-
-        if(i1.getState().equals(BGPStates.Connect) && i2.getState().equals(BGPStates.Connect)) {
+        if((!i1.getState().equals(BGPStates.Active) ||
+                i1.getState().equals(BGPStates.Idle)) &&
+                    (!i2.getState().equals(BGPStates.Active) ||
+                        i2.getState().equals(BGPStates.Idle))) {
             // Send SYN message
             SendTcpPacket task = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0,
                     ipAddress1, ipAddress2, Globals.DESTINATION_MAC_ADDRESS, true, false, false, false, "");
@@ -58,17 +59,22 @@ public class DoTest {
 
             // Change BGP state to OpenSent
             i1.setState(BGPStates.OpenSent);
+            System.out.println("\033[0;35m" + "[" + r1.getName()  + " - " + i1.getName() + "] BGP state : OpenSent" + "\033[0m");
             i2.setState(BGPStates.OpenSent);
+            System.out.println("\033[0;35m" + "[" + r2.getName()  + " - " + i2.getName() + "] BGP state : OpenSent" + "\033[0m");
         }
     }
 
     private static Router changeRouterStateFromInput() throws InterruptedException {
-        Scanner input = new Scanner(System.in);
-        System.out.println("Enter router name followed by desired state: ");
         boolean wrongInput = true;
         Router changedRouter = null;
+        Scanner input = new Scanner(System.in);
+
+        System.out.println("Enter router name followed by desired state: ");
+
         while(wrongInput) {
             String line = input.nextLine();
+
             if(line.equals("exit")) {
                 wrongInput = false;
             } else {
@@ -124,6 +130,12 @@ public class DoTest {
             }
         });
 
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            SendOpenMessage task = new SendOpenMessage(entry.getKey(), (String) entry.getValue());
+            ThreadPool.submit(task);
+        });
+
+
         // Send keep alive messages to every connected router
         linkMap.entrySet().parallelStream().forEach(entry -> {
             SendKeepAliveMessage task = new SendKeepAliveMessage(entry.getKey(), (String) entry.getValue());
@@ -131,6 +143,7 @@ public class DoTest {
         });
 
         // Select router to change state
+        Thread.sleep(2000);
         changeRouterStateFromInput();
 
         // Select router to change state
@@ -151,9 +164,27 @@ public class DoTest {
                             entry.getKey(), (String) entry.getValue(), Globals.DESTINATION_MAC_ADDRESS,
                             false, false, false, true, "");
                     ThreadPool.submit(task1);
+
+                    try {
+                        // Resend OPEN message to previously connected routers
+                        Thread.sleep(3000);
+                        SendOpenMessage task2 = new SendOpenMessage(entry.getKey(), (String) entry.getValue());
+                        ThreadPool.submit(task2);
+
+                        // Resend KEEPALIVE message to previously connected routers
+                        Thread.sleep(3000);
+                        SendKeepAliveMessage task3 = new SendKeepAliveMessage(entry.getKey(), (String) entry.getValue());
+                        ThreadPool.submit(task3);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
                 }
             });
         }
+
+
+        // TODO continue here
 
 //        ThreadPool.stop();
     }

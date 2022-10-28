@@ -72,12 +72,7 @@ public class Router implements Runnable {
             // Change BGP states to Active after router is disabled
             for (RouterInterface inter : this.getInterfaces()) {
                 inter.setState(BGPStates.Active);
-
-                //change state for interface that is connected to this one through direct link
-                for (Router r: this.getTcpConnectedRouters()) {
-                    RouterInterface connInter = r.getRouterInterfaceByIP(inter.getDirectLink());
-                    connInter.setState(BGPStates.Active);
-                }
+                System.out.println("\033[0;35m" + "[" + name  + " - " + inter.getName() + "] BGP state : Active" + "\033[0m");
             }
         }
         System.out.println("[" + name  + "] Router state : " + (isEnabled? "Enabled" : "Disabled"));
@@ -88,19 +83,13 @@ public class Router implements Runnable {
         // Change BGP states to Idle after router is restarted
         for (RouterInterface inter : this.getInterfaces()) {
             inter.setState(BGPStates.Idle);
-
-            // Change BGP states of connected routers to Idle after router is restarted
-            for (Router r : this.getTcpConnectedRouters()) {
-                RouterInterface connInter = r.getRouterInterfaceByIP(inter.getDirectLink());
-                connInter.setState(BGPStates.Connect);
-            }
+            System.out.println("\033[0;35m" + "[" + name  + " - " + inter.getName() + "] BGP state : Idle" + "\033[0m");
         }
 
         this.isRestarted = true;
         this.neighborTable = new NeighborTable();
         this.queue = new LinkedBlockingQueue<>();
         this.tcpConnectedRouters = new ArrayList<>();
-        this.changeAllInterfacesBGPState(BGPStates.Idle);
     }
 
     public RoutingTableEntry getRoutingTable() {
@@ -140,12 +129,6 @@ public class Router implements Runnable {
             }
         }
         return null;
-    }
-
-    public void changeAllInterfacesBGPState (BGPStates state) {
-        for (RouterInterface i : this.getInterfaces()) {
-            i.setState(state);
-        }
     }
 
     public static Router getRouterByIP(String ip) {
@@ -205,6 +188,7 @@ public class Router implements Runnable {
 
             // Change BGP state to Connect
             i.setState(BGPStates.Connect);
+            System.out.println("\033[0;35m" + "[" + name  + " - " + i.getName() + "] BGP state : Connect" + "\033[0m");
 
 			if(i.getDirectLink() != null) {
 				RouterInterface neighborRouter = getRouterInterfaceByIP(i.getDirectLink());
@@ -247,7 +231,7 @@ public class Router implements Runnable {
         // Enabling router
         this.isEnabled = true;
         
-        System.out.println("[" + name  + "] Router state : enabled");
+        System.out.println("[" + name  + "] Router state : Enabled");
         
         // Adding direct links to the neighbor table
         populateNeighborTable();
