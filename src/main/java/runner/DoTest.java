@@ -9,10 +9,7 @@ import java.util.concurrent.Semaphore;
 import java.util.stream.IntStream;
 
 import components.*;
-import multithread.SendKeepAliveMessage;
-import multithread.SendOpenMessage;
-import multithread.SendTcpPacket;
-import multithread.ThreadPool;
+import multithread.*;
 import utils.ParseInputFile;
 
 import static components.Globals.linkMap;
@@ -144,7 +141,15 @@ public class DoTest {
 
         // Select router to change state
         Thread.sleep(2000);
-        changeRouterStateFromInput();
+        Router shutdownRouter = changeRouterStateFromInput();
+
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            if (shutdownRouter.getEnabledInterfacesAddresses().contains(entry.getKey())) {
+                SendNotificationMessage task1 =
+                        new SendNotificationMessage(entry.getKey(), (String) entry.getValue());
+                ThreadPool.submit(task1);
+            }
+        });
 
         // Select router to change state
         Router restartedRouter = changeRouterStateFromInput();
@@ -167,7 +172,7 @@ public class DoTest {
 
                     try {
                         // Resend OPEN message to previously connected routers
-                        Thread.sleep(3000);
+                        Thread.sleep(7000);
                         SendOpenMessage task2 = new SendOpenMessage(entry.getKey(), (String) entry.getValue());
                         ThreadPool.submit(task2);
 

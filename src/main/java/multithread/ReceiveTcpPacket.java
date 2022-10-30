@@ -71,27 +71,36 @@ public class ReceiveTcpPacket implements Runnable {
 				 * 0000010.... -> every 6th bit is 1....you can see how update packets will look like in binary
 				 * and maybe try doing this to differentiate */
 
+				// Receiving KEEPALIVE packet
+				if(tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().length() == 0) {
+					System.out.println("[" + srcRouterName + " -> " + destRouterName + "] KEEPALIVE packet sucessfully received on interface " + interfaceName);
+
+					if (tcpPacket2.getSequenceNumber() == 0) {
+						destInt.setState(BGPStates.Established);
+						System.out.println("\033[0;35m" + "[" + dest.getName()  + " - " + destInt.getName() + "] BGP state : Established" + "\033[0m");
+					}
+				}
+
+				// Receiving NOTIFICATION packet
+				else if(tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(5) == '1' && tcpPacket2.getData().charAt(6) == '1') {
+					System.out.println("[" + srcRouterName + " -> " + destRouterName + "] NOTIFICATION packet sucessfully received on interface " + interfaceName);
+
+					// Change BGP state to OpenConfirm
+					destInt.setState(BGPStates.Connect);
+					System.out.println("\033[0;35m" + "[" + dest.getName()  + " - " + destInt.getName() + "] BGP state : Connect" + "\033[0m");
+				}
+
+
 				// Receiving OPEN packet
-				if(tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().length() > 0) {
-					System.out.println("##########" + tcpPacket2.getData());
+				else if(tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(5) == '1') {
 					System.out.println("[" + srcRouterName + " -> " + destRouterName + "] OPEN packet sucessfully received on interface " + interfaceName);
 
-					// If needed, get router ID, AS from this object
+					// TODO If needed, get router ID, AS from this object
 					BgpPacket bgpPacket2 = new BgpPacket(tcpPacket2.getData());
 
 					// Change BGP state to OpenConfirm
 					destInt.setState(BGPStates.OpenConfirm);
 					System.out.println("\033[0;35m" + "[" + dest.getName()  + " - " + destInt.getName() + "] BGP state : OpenConfirm" + "\033[0m");
-				}
-
-				// Receiving KEEPALIVE packet
-				else if(tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().length() == 0) {
-					System.out.println("[" + srcRouterName + " -> " + destRouterName + "] KEEPALIVE packet sucessfully received on interface " + interfaceName);
-
-					if (tcpPacket2.getSequenceNumber() == 1) {
-						destInt.setState(BGPStates.Established);
-						System.out.println("\033[0;35m" + "[" + dest.getName()  + " - " + destInt.getName() + "] BGP state : Established" + "\033[0m");
-					}
 				}
 
 				// Receiving SYN + ACK packet
