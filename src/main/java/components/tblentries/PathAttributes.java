@@ -1,16 +1,26 @@
 package components.tblentries;
 
+import utils.BinaryFunctions;
+
+import java.util.ArrayList;
+
 public class PathAttributes {
 
     private String ORIGIN;
-    private String AS_PATH;
+    private PathSegments[] AS_PATH;
     private String NEXT_HOP;
-    private String MULTI_EXIT_DISC;
-    private String LOCAL_PREF;
-    private String ATOMIC_AGGREGATE;
-    private String AGGREGATOR;
+    private String MULTI_EXIT_DISC = "";
+    private String LOCAL_PREF = "";
+    private String ATOMIC_AGGREGATE = "";
+    private String AGGREGATOR = "";
 
-    public PathAttributes(String ORIGIN, String AS_PATH, String NEXT_HOP, String MULTI_EXIT_DISC, String LOCAL_PREF, String ATOMIC_AGGREGATE, String AGGREGATOR) {
+    public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP) {
+        this.ORIGIN = ORIGIN;
+        this.AS_PATH = AS_PATH;
+        this.NEXT_HOP = NEXT_HOP;
+    }
+
+    public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP, String MULTI_EXIT_DISC, String LOCAL_PREF, String ATOMIC_AGGREGATE, String AGGREGATOR) {
         this.ORIGIN = ORIGIN;
         this.AS_PATH = AS_PATH;
         this.NEXT_HOP = NEXT_HOP;
@@ -20,11 +30,22 @@ public class PathAttributes {
         this.AGGREGATOR = AGGREGATOR;
     }
 
+    public PathAttributes(String bitsArray) {
+        super();
+        this.ORIGIN = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 8, String.class);
+        this.AS_PATH = (PathSegments[]) BinaryFunctions.bitsArrayToObject(bitsArray, 8, 16, ArrayList.class);
+        this.NEXT_HOP = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 24, 8, String.class);
+        this.MULTI_EXIT_DISC = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 32, 24, String.class);
+        this.LOCAL_PREF = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 24, String.class);
+        this.ATOMIC_AGGREGATE = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 80, 24, String.class);
+        this.AGGREGATOR = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 104, 24, String.class);
+    }
+
     public String getORIGIN() {
         return ORIGIN;
     }
 
-    public String getAS_PATH() {
+    public PathSegments[] getAS_PATH() {
         return AS_PATH;
     }
 
@@ -46,5 +67,37 @@ public class PathAttributes {
 
     public String getAGGREGATOR() {
         return AGGREGATOR;
+    }
+
+    public void setMULTI_EXIT_DISC(String MULTI_EXIT_DISC) {
+        this.MULTI_EXIT_DISC = MULTI_EXIT_DISC;
+    }
+
+    public void setLOCAL_PREF(String LOCAL_PREF) {
+        this.LOCAL_PREF = LOCAL_PREF;
+    }
+
+    public void setATOMIC_AGGREGATE(String ATOMIC_AGGREGATE) {
+        this.ATOMIC_AGGREGATE = ATOMIC_AGGREGATE;
+    }
+
+    public void setAGGREGATOR(String AGGREGATOR) {
+        this.AGGREGATOR = AGGREGATOR;
+    }
+
+    private int getBitsArrayList() {
+
+    }
+
+    public String packetToBitArray() {
+        String bitsArray =
+                BinaryFunctions.toBitsArray(this.ORIGIN, 8) +
+                        BinaryFunctions.toBitsArray(this.AS_PATH, this.AS_PATH.length) +
+                        BinaryFunctions.toBitsArray(this.NEXT_HOP, 8) +
+                        BinaryFunctions.toBitsArray(this.MULTI_EXIT_DISC, 8) +
+                        BinaryFunctions.toBitsArray(this.LOCAL_PREF, 8) +
+                        BinaryFunctions.toBitsArray(this.ATOMIC_AGGREGATE, 8) +
+                        BinaryFunctions.toBitsArray(this.AGGREGATOR, 8);
+        return bitsArray;
     }
 }

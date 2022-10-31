@@ -2,6 +2,7 @@ package packets;
 
 import components.tblentries.PathAttributes;
 import multithread.SendTcpPacket;
+import utils.BinaryFunctions;
 
 import java.util.List;
 import java.util.Map;
@@ -19,15 +20,17 @@ import java.util.Map;
             BGP uses these attributes to avoid routing loops, and perform routing and protocol extensions.
         - NLRI—Each feasible route is represented as <length, prefix>.
  */
-public class UpdateMessagePacket {
+public class UpdateMessagePacket extends BgpPacket {
     private long WithdrawnRoutesLength;
     private List<Map<Integer, String>> WithdrawnRoutes; // Represented as <length, prefix>
     private long TotalPathAttributeLength;
     private PathAttributes PathAttributes;
     private List<Map<Integer, String>> NetworkLayerReachabilityInformation; // Represented as <length, prefix>
 
-    public UpdateMessagePacket(long WithdrawnRoutesLength, List<Map<Integer, String>> WithdrawnRoutes, long TotalPathAttributeLength,
-                         PathAttributes PathAttributes, List<Map<Integer, String>> NetworkLayerReachabilityInformation) {
+    public UpdateMessagePacket(int version, int as, int holdTime, long id, long WithdrawnRoutesLength, List<Map<Integer, String>> WithdrawnRoutes, long TotalPathAttributeLength,
+                               PathAttributes PathAttributes, List<Map<Integer, String>> NetworkLayerReachabilityInformation) {
+
+        super(version, as, holdTime, id);
         this.WithdrawnRoutesLength = WithdrawnRoutesLength;
         this.WithdrawnRoutes = WithdrawnRoutes;
         this.TotalPathAttributeLength = TotalPathAttributeLength;
@@ -36,10 +39,35 @@ public class UpdateMessagePacket {
     }
 
     public void dispatch(int sourcePort, int destinationPort, int seqNumber, int ackNumber,
-                         String sourceIpAddress, String destinationIpAddress, String destinationMacAddress){
+                         String sourceIpAddress, String destinationIpAddress, String destinationMacAddress) {
         SendTcpPacket sendTcpPacket = new SendTcpPacket(sourcePort, destinationPort, seqNumber, ackNumber,
                 sourceIpAddress, destinationIpAddress, destinationMacAddress, false, true, false, false, this.toString());
 
+    }
+
+    public UpdateMessagePacket(String bitsArray) {
+        super(bitsArray);
+        this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 16, Long.class);
+        this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 16, 16, Long.class);
+        this.PathAttributes = new PathAttributes(bitsArray.substring(24, 64 + (int) this.TotalPathAttributeLength));
+        this.NetworkLayerReachabilityInformation = BinaryFunctions.bitsArrayToNetworkLayerReachabilityInformation(bitsArray.substring(80 + (int) this.TotalPathAttributeLength));
+    }
+
+    public String packetToBitArray(){
+        String bitsArray = super.packetToBitArray() +
+                BinaryFunctions.toBitsArray(this.WithdrawnRoutesLength, 16) +
+                BinaryFunctions.toBitsArray(this.TotalPathAttributeLength, 16) +
+                this.PathAttributes.packetToBitArray();
+
+        for (Map<Integer, String> route : this.WithdrawnRoutes) {
+            bitsArray += BinaryFunctions.toBitsArray(route.get("length"), 8) + route.get("prefix");
+        }
+
+        for (Map<Integer, String> route : this.NetworkLayerReachabilityInformation) {
+            bitsArray += BinaryFunctions.toBitsArray(route.get("length"), 8) + route.get("prefix");
+        }
+
+        return bitsArray;
     }
 
     public long getWithdrawnRoutesLength() {
@@ -54,7 +82,7 @@ public class UpdateMessagePacket {
         return TotalPathAttributeLength;
     }
 
-    public components.tblentries.PathAttributes getPathAttributes() {
+    public PathAttributes getPathAttributes() {
         return PathAttributes;
     }
 
