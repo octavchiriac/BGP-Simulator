@@ -2,12 +2,13 @@ package components;
 
 public class RouterInterface {
 
-	public String name;
-	public String ipAddress;
-	public String subnetMask;
-	public boolean isUp;
-	public String directLink;
-	public String as;
+	private String name;
+	private String ipAddress;
+	private String subnetMask;
+	private boolean isUp;
+	private String directLink;
+	private String as;
+	BGPStates state;
 
 	public RouterInterface(String name, String ipAddress, String subnetMask, String as) {
 		super();
@@ -16,6 +17,7 @@ public class RouterInterface {
 		this.subnetMask = subnetMask;
 		this.as = as;
 		this.isUp = true;
+		this.state = BGPStates.Idle;
 	}
 
 	public String getName() {
@@ -25,6 +27,15 @@ public class RouterInterface {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public BGPStates getState() {
+		return state;
+	}
+
+	public void setState(BGPStates state) {
+		this.state = state;
+	}
+
 
 	public String getIpAddress() {
 		return ipAddress;

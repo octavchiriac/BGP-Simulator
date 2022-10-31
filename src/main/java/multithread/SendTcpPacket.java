@@ -78,15 +78,19 @@ public class SendTcpPacket implements Runnable{
 		String packetType = null;
         Router src = getRouterByIP(sourceIpAddress);
         Router dest = getRouterByIP(destinationIpAddress);
-        
-        if(isSyn && isAck) {
-        	packetType = "SYN + ACK";
-		} else if (isPsh && isAck) {
-			packetType = "PSH + ACK";
-        } else if(isAck) {
-        	packetType = "ACK";
-        } else if (isSyn) {
-        	packetType = "SYN";
+
+		if (isPsh && isAck && data.length() == 0) {
+			packetType = "KEEPALIVE";
+		} else if(isPsh && isAck && data.charAt(5) == '1' && data.charAt(6) == '1') {
+			packetType = "NOTIFICATION";
+		} else if (isPsh && isAck && data.charAt(5) == '1') {
+			packetType = "OPEN";
+		} else if(isSyn && isAck) {
+			packetType = "SYN + ACK";
+		} else if(isAck) {
+			packetType = "ACK";
+		} else if (isSyn) {
+			packetType = "SYN";
 		} else if (isRst) {
 			packetType = "RST";
 		}
