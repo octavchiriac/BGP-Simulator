@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 public class PathSegments {
     private String destinationIp;
-    private ArrayList<String> pathSegmentValue; // List of all possible paths for destinationIp
+    private String[] pathSegmentValue; // List of all possible paths for destinationIp
 
-    public PathSegments(String destinationIp, ArrayList<String> pathSegmentValue){
+    public PathSegments(String destinationIp, String[] pathSegmentValue){
         this.destinationIp = destinationIp;
         this.pathSegmentValue = pathSegmentValue;
     }
@@ -15,7 +15,7 @@ public class PathSegments {
         return destinationIp;
     }
 
-    public ArrayList<String> getPathSegmentValue() {
+    public String[] getPathSegmentValue() {
         return pathSegmentValue;
     }
 

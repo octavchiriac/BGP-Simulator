@@ -1,8 +1,10 @@
 package components.tblentries;
 
 import utils.BinaryFunctions;
+import utils.ObjectSizeFetcher;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class PathAttributes {
 
@@ -32,13 +34,16 @@ public class PathAttributes {
 
     public PathAttributes(String bitsArray) {
         super();
+
+        int asPathSize = bitsArray.length() - 48;
+
         this.ORIGIN = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 8, String.class);
-        this.AS_PATH = (PathSegments[]) BinaryFunctions.bitsArrayToObject(bitsArray, 8, 16, ArrayList.class);
+        this.AS_PATH = (PathSegments[]) BinaryFunctions.bitsArrayToObject(bitsArray, 8, asPathSize, Arrays.class);
         this.NEXT_HOP = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 24, 8, String.class);
-        this.MULTI_EXIT_DISC = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 32, 24, String.class);
-        this.LOCAL_PREF = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 24, String.class);
-        this.ATOMIC_AGGREGATE = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 80, 24, String.class);
-        this.AGGREGATOR = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 104, 24, String.class);
+        this.MULTI_EXIT_DISC = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 32, 8, String.class);
+        this.LOCAL_PREF = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 8, String.class);
+        this.ATOMIC_AGGREGATE = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 80, 8, String.class);
+        this.AGGREGATOR = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 104, 8, String.class);
     }
 
     public String getORIGIN() {
@@ -85,14 +90,39 @@ public class PathAttributes {
         this.AGGREGATOR = AGGREGATOR;
     }
 
-    private int getBitsArrayList() {
+    private int getBitsArrayList(PathSegments[] AS_PATH) {
 
+        // 8 bytes and another 4 bytes for the list headers + size of array
+        int asPathBytes = 12;
+        for (PathSegments pathSegment : AS_PATH) {
+            asPathBytes += ObjectSizeFetcher.getObjectSize(pathSegment);
+        }
+
+        return asPathBytes;
     }
 
     public String packetToBitArray() {
+        int asPathSize = getBitsArrayList(this.AS_PATH);
+
+        if(this.NEXT_HOP.length() == 0){
+            this.NEXT_HOP = "00000000";
+        }
+        if(this.MULTI_EXIT_DISC.length() == 0){
+            this.MULTI_EXIT_DISC = "00000000";
+        }
+        if(this.LOCAL_PREF.length() == 0){
+            this.LOCAL_PREF = "00000000";
+        }
+        if(this.ATOMIC_AGGREGATE.length() == 0){
+            this.ATOMIC_AGGREGATE = "00000000";
+        }
+        if(this.AGGREGATOR.length() == 0){
+            this.AGGREGATOR = "00000000";
+        }
+
         String bitsArray =
                 BinaryFunctions.toBitsArray(this.ORIGIN, 8) +
-                        BinaryFunctions.toBitsArray(this.AS_PATH, this.AS_PATH.length) +
+                        BinaryFunctions.toBitsArray(this.AS_PATH, asPathSize) +
                         BinaryFunctions.toBitsArray(this.NEXT_HOP, 8) +
                         BinaryFunctions.toBitsArray(this.MULTI_EXIT_DISC, 8) +
                         BinaryFunctions.toBitsArray(this.LOCAL_PREF, 8) +

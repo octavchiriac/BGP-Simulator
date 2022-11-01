@@ -49,8 +49,9 @@ public class UpdateMessagePacket extends BgpPacket {
         super(bitsArray);
         this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 16, Long.class);
         this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 16, 16, Long.class);
-        this.PathAttributes = new PathAttributes(bitsArray.substring(24, 64 + (int) this.TotalPathAttributeLength));
-        this.NetworkLayerReachabilityInformation = BinaryFunctions.bitsArrayToNetworkLayerReachabilityInformation(bitsArray.substring(80 + (int) this.TotalPathAttributeLength));
+        this.PathAttributes = new PathAttributes(bitsArray.substring(24, (int) this.TotalPathAttributeLength));
+        this.WithdrawnRoutes = BinaryFunctions.bitsArrayToObject(bitsArray, this.TotalPathAttributeLength, this.WithdrawnRoutesLength,  List<Map<Integer, String>>.class);
+        this.NetworkLayerReachabilityInformation = BinaryFunctions.bitsArrayToObject(bitsArray, 80 + (int) this.TotalPathAttributeLength));
     }
 
     public String packetToBitArray(){
@@ -68,6 +69,11 @@ public class UpdateMessagePacket extends BgpPacket {
         }
 
         return bitsArray;
+    }
+
+    private Object bitsArrayToNetworkLayerReachabilityInformation(String bitsArray){
+
+
     }
 
     public long getWithdrawnRoutesLength() {
