@@ -101,9 +101,9 @@ public class DoTest {
         parseInput.parseRouterInterfaces();
         parseInput.parseDirectLinks();
 
-//        for (int i = 0; i < 3; i++) {
-//            Globals.routers.get(i).printRouterInfo();
-//        }
+        for (int i = 0; i < routers.size(); i++) {
+            Globals.routers.get(i).printRouterInfo();
+        }
 
         // Start up routers
         for (Router r : routers) {
