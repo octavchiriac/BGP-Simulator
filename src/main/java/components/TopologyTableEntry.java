@@ -2,6 +2,9 @@ package components;
 
 import java.util.ArrayList;
 
+/*
+    * REPLACED WITH PathAttributes.java
+ */
 public class TopologyTableEntry {
     public String destinationIp;
     public String nextHop;
