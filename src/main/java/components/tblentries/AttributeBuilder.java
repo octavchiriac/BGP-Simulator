@@ -1,12 +1,16 @@
 package components.tblentries;
 
+import java.nio.file.Path;
+
 /// <summary>
 /// Concrete builder implementation
 /// </summary>
 public class AttributeBuilder {
 
     private String ORIGIN = "0";
-    private String AS_PATH = "0";
+
+    //private String AS_PATH = "0";
+    private PathSegments[] AS_PATH=null;
     private String NEXT_HOP = "0";
     private String MULTI_EXIT_DISC = null;
     private String LOCAL_PREF = null;
@@ -24,7 +28,7 @@ public class AttributeBuilder {
         return this;
     }
 
-    public AttributeBuilder setAS_PATH(String AS_PATH) {
+    public AttributeBuilder setAS_PATH(PathSegments[] AS_PATH) {
         this.AS_PATH = AS_PATH;
         return this;
     }

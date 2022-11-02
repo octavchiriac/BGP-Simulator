@@ -19,7 +19,7 @@ public class TopologyTable{
 	public TopologyTable(){
 		super();
 		//listRIB = new ArrayList<TopologyTableEntry>();
-		listRIB = new ArrayList<PathAttributes>(); //TODO: sostituire con PathAttributes
+		listRIB = new ArrayList<PathAttributes>();
 	}
 
 	public void insertNewEntry(PathAttributes pathAttributes){
