@@ -3,7 +3,9 @@ package packets;
 import components.tblentries.PathAttributes;
 import multithread.SendTcpPacket;
 import utils.BinaryFunctions;
+import utils.ParserList;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +24,10 @@ import java.util.Map;
  */
 public class UpdateMessagePacket extends BgpPacket {
     private long WithdrawnRoutesLength;
-    private List<Map<Integer, String>> WithdrawnRoutes; // Represented as <length, prefix>
+    private List<Map<Integer, String>> WithdrawnRoutes; // Represented as <length, IP_prefix>
     private long TotalPathAttributeLength;
     private PathAttributes PathAttributes;
-    private List<Map<Integer, String>> NetworkLayerReachabilityInformation; // Represented as <length, prefix>
+    private List<Map<Integer, String>> NetworkLayerReachabilityInformation; // Represented as <length, IP_prefix>
 
     public UpdateMessagePacket(int version, int as, int holdTime, long id, long WithdrawnRoutesLength, List<Map<Integer, String>> WithdrawnRoutes, long TotalPathAttributeLength,
                                PathAttributes PathAttributes, List<Map<Integer, String>> NetworkLayerReachabilityInformation) {
@@ -50,8 +52,9 @@ public class UpdateMessagePacket extends BgpPacket {
         this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 16, Long.class);
         this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 16, 16, Long.class);
         this.PathAttributes = new PathAttributes(bitsArray.substring(24, (int) this.TotalPathAttributeLength));
-        this.WithdrawnRoutes = BinaryFunctions.bitsArrayToObject(bitsArray, this.TotalPathAttributeLength, this.WithdrawnRoutesLength,  List<Map<Integer, String>>.class);
-        this.NetworkLayerReachabilityInformation = BinaryFunctions.bitsArrayToObject(bitsArray, 80 + (int) this.TotalPathAttributeLength));
+
+        this.WithdrawnRoutes = ParserList.parseString((String) BinaryFunctions.bitsArrayToObject(bitsArray, 24 + (int) this.TotalPathAttributeLength, (int) this.WithdrawnRoutesLength, String.class));
+        this.NetworkLayerReachabilityInformation = ParserList.parseString((String) BinaryFunctions.bitsArrayToObject(bitsArray, 24 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength, bitsArray.length() - 24 - (int) this.TotalPathAttributeLength - (int) this.WithdrawnRoutesLength, String.class));
     }
 
     public String packetToBitArray(){
@@ -60,22 +63,14 @@ public class UpdateMessagePacket extends BgpPacket {
                 BinaryFunctions.toBitsArray(this.TotalPathAttributeLength, 16) +
                 this.PathAttributes.packetToBitArray();
 
-        for (Map<Integer, String> route : this.WithdrawnRoutes) {
-            bitsArray += BinaryFunctions.toBitsArray(route.get("length"), 8) + route.get("prefix");
-        }
+        String stringedWithdrawnRoutes = ParserList.parseList(this.WithdrawnRoutes);
+        bitsArray += BinaryFunctions.toBitsArray(stringedWithdrawnRoutes, stringedWithdrawnRoutes.length());
 
-        for (Map<Integer, String> route : this.NetworkLayerReachabilityInformation) {
-            bitsArray += BinaryFunctions.toBitsArray(route.get("length"), 8) + route.get("prefix");
-        }
+        String stringedNetworkLayerReachabilityInformation = ParserList.parseList(this.NetworkLayerReachabilityInformation);
+        bitsArray += BinaryFunctions.toBitsArray(stringedNetworkLayerReachabilityInformation, stringedNetworkLayerReachabilityInformation.length());
 
         return bitsArray;
     }
-
-    private Object bitsArrayToNetworkLayerReachabilityInformation(String bitsArray){
-
-
-    }
-
     public long getWithdrawnRoutesLength() {
         return WithdrawnRoutesLength;
     }

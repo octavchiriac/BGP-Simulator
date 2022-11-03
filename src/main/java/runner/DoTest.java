@@ -9,6 +9,7 @@ import java.util.concurrent.Semaphore;
 import java.util.stream.IntStream;
 
 import components.*;
+import components.tblentries.PathAttributes;
 import multithread.*;
 import utils.ParseInputFile;
 
@@ -122,6 +123,31 @@ public class DoTest {
         linkMap.entrySet().parallelStream().forEach(entry -> {
             try {
                 establishTcpConnection(entry.getKey(), (String) entry.getValue());
+            } catch (InterruptedException e) {
+                System.err.println(e.getMessage());
+            }
+        });
+
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            try {
+                List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
+                List<Map<Integer, String>> NetworkLayerReachabilityInformation;
+                PathAttributes PathAttributes;
+                long TotalPathAttributeLength = 0;
+                long WithdrawnRoutesLength = 0;
+
+                // filling lists with data
+                for (int i = 0; i < 3; i++) {
+                    Map<Integer, String> WithdrawnRoute = new HashMap<>();
+                    WithdrawnRoute.put(i, "192.168.0." + i);
+                }
+                for (int i = 0; i < 3; i++) {
+                    Map<Integer, String> NetworkLayerReachabilityInfo = new HashMap<>();
+                    NetworkLayerReachabilityInfo.put(i, "192.168.0." + i);
+                }
+
+
+                SendUpdateMessage task = new SendUpdateMessage(entry.getKey(), (String) entry.getValue());
             } catch (InterruptedException e) {
                 System.err.println(e.getMessage());
             }

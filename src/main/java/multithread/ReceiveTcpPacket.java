@@ -53,7 +53,7 @@ public class ReceiveTcpPacket implements Runnable {
 	    		
 	    		//TODO search in table for destination
 	    		
-	    		//TODO what to do here if you don't find the router in the table? do you broadcast?
+	    		//TODO what to do here if you don't find the router in the table? do you broadcast? --> DROP THE PACKET
 	    		ipPacket2.decreaseTimeToLive();
 	    		
 	    		Packet hdlcPacket = new HdlcPacket("01111110", Globals.DESTINATION_MAC_ADDRESS, "00000000", ipPacket2.packetToBitArray(), "00000000");
@@ -70,6 +70,8 @@ public class ReceiveTcpPacket implements Runnable {
 				 * For example, every OPEN packet starts with the BGP version which is 4, so every packet starts like
 				 * 0000010.... -> every 6th bit is 1....you can see how update packets will look like in binary
 				 * and maybe try doing this to differentiate */
+
+				System.out.println("PACKET RECEIVED!" + tcpPacket2.getData());
 
 				// Receiving KEEPALIVE packet
 				if(tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().length() == 0) {
