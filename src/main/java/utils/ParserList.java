@@ -1,5 +1,7 @@
 package utils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,31 +21,31 @@ public class ParserList {
     public static String MapToString(Map<Integer,String> map) {
         StringBuilder mapAsString = new StringBuilder("{");
         for (Integer key: map.keySet()) {
-            mapAsString.append(key + "=" + map.get(key) + ",");
+            mapAsString.append(key + "=" + map.get(key));
         }
-        mapAsString.deleteCharAt(mapAsString.length() - 1);
         return mapAsString.append("}").toString();
     }
 
     //INVERSE OPERATION
-    public static String parseString(String mapString){
-        String result = "";
+    //convert the string to a list of maps
+    public static ArrayList<Map<Integer,String>> parseString(String mapString){
+        List<Map<Integer,String>> tmpList = new ArrayList<Map<Integer,String>>();
         String[] mapStringArray = mapString.split(";");
         for (String o : mapStringArray) {
-            result += ParserList.StringToMap(o) + ";";
+            tmpList.add(ParserList.StringToMap(o));
         }
-        result.substring(0, result.length() - 1);
-        return result;
+        return (ArrayList<Map<Integer,String>>) tmpList;
     }
 
-    public static String StringToMap(String mapString){
-        StringBuilder mapAsString = new StringBuilder("{");
-        String[] mapStringArray = mapString.split(",");
+    //for each entry in the string (which corresponds to a map entry), split the string and convert it into a map
+    public static Map<Integer,String> StringToMap(String mapString){
+        Map<Integer,String> map = new HashMap<Integer,String>();
+        String[] mapStringArray = mapString.split(";");
         for (String o : mapStringArray) {
-            String[] mapStringArray2 = o.split("=");
-            mapAsString.append(mapStringArray2[0] + "=" + mapStringArray2[1] + ",");
+            map.put(Integer.parseInt(o.split("=")[0]), o.split("=")[1]);
         }
-        return mapAsString.append("}").toString();
+        return map;
+
     }
 
 }
