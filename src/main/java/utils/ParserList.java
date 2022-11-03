@@ -21,6 +21,7 @@ public class ParserList {
         for (Integer key: map.keySet()) {
             mapAsString.append(key + "=" + map.get(key) + ",");
         }
+        mapAsString.deleteCharAt(mapAsString.length() - 1);
         return mapAsString.append("}").toString();
     }
 
