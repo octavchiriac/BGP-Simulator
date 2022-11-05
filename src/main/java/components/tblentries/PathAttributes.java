@@ -90,19 +90,13 @@ public class PathAttributes {
         this.AGGREGATOR = AGGREGATOR;
     }
 
-    private int getBitsArrayList(PathSegments[] AS_PATH) {
-
-        // 8 bytes and another 4 bytes for the list headers + size of array
-        int asPathBytes = 12;
-        for (PathSegments pathSegment : AS_PATH) {
-            asPathBytes += ObjectSizeFetcher.getObjectSize(pathSegment);
-        }
-
-        return asPathBytes;
-    }
-
     public String packetToBitArray() {
-        int asPathSize = getBitsArrayList(this.AS_PATH);
+
+        String stringedAsPathList = "";
+        for (PathSegments pathSegment : AS_PATH) {
+            stringedAsPathList += pathSegment.toBitArrayString() + "-";
+        }
+        System.out.println("stringedAsPathList: " + stringedAsPathList);
 
         if(this.NEXT_HOP.length() == 0){
             this.NEXT_HOP = "00000000";
@@ -122,7 +116,7 @@ public class PathAttributes {
 
         String bitsArray =
                 BinaryFunctions.toBitsArray(this.ORIGIN, 8) +
-                        BinaryFunctions.toBitsArray(this.AS_PATH, asPathSize) +
+                        BinaryFunctions.toBitsArray(stringedAsPathList, stringedAsPathList.length()) +
                         BinaryFunctions.toBitsArray(this.NEXT_HOP, 8) +
                         BinaryFunctions.toBitsArray(this.MULTI_EXIT_DISC, 8) +
                         BinaryFunctions.toBitsArray(this.LOCAL_PREF, 8) +

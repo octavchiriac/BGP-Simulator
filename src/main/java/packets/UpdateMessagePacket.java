@@ -29,48 +29,65 @@ public class UpdateMessagePacket extends BgpPacket {
     private PathAttributes PathAttributes;
     private List<Map<Integer, String>> NetworkLayerReachabilityInformation; // Represented as <length, IP_prefix>
 
-    public UpdateMessagePacket(int version, int as, int holdTime, long id, long WithdrawnRoutesLength, List<Map<Integer, String>> WithdrawnRoutes, long TotalPathAttributeLength,
+    public UpdateMessagePacket(int version, int as, int holdTime, long id, List<Map<Integer, String>> WithdrawnRoutes,
                                PathAttributes PathAttributes, List<Map<Integer, String>> NetworkLayerReachabilityInformation) {
 
         super(version, as, holdTime, id);
-        this.WithdrawnRoutesLength = WithdrawnRoutesLength;
         this.WithdrawnRoutes = WithdrawnRoutes;
-        this.TotalPathAttributeLength = TotalPathAttributeLength;
         this.PathAttributes = PathAttributes;
         this.NetworkLayerReachabilityInformation = NetworkLayerReachabilityInformation;
     }
 
-    public void dispatch(int sourcePort, int destinationPort, int seqNumber, int ackNumber,
-                         String sourceIpAddress, String destinationIpAddress, String destinationMacAddress) {
-        SendTcpPacket sendTcpPacket = new SendTcpPacket(sourcePort, destinationPort, seqNumber, ackNumber,
-                sourceIpAddress, destinationIpAddress, destinationMacAddress, false, true, false, false, this.toString());
-
-    }
-
     public UpdateMessagePacket(String bitsArray) {
         super(bitsArray);
-        this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 16, Long.class);
-        this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 16, 16, Long.class);
-        this.PathAttributes = new PathAttributes(bitsArray.substring(24, (int) this.TotalPathAttributeLength));
+        this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 16, Long.class);
+        this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 72, 16, Long.class);
+        this.PathAttributes = new PathAttributes(bitsArray.substring(88, (int) this.TotalPathAttributeLength));
 
-        this.WithdrawnRoutes = ParserList.parseString((String) BinaryFunctions.bitsArrayToObject(bitsArray, 24 + (int) this.TotalPathAttributeLength, (int) this.WithdrawnRoutesLength, String.class));
-        this.NetworkLayerReachabilityInformation = ParserList.parseString((String) BinaryFunctions.bitsArrayToObject(bitsArray, 24 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength, bitsArray.length() - 24 - (int) this.TotalPathAttributeLength - (int) this.WithdrawnRoutesLength, String.class));
+
+        // TODO: Fix this
+        this.WithdrawnRoutes = ParserList.parseString((String) BinaryFunctions.bitsArrayToObject(bitsArray, 88 + (int) this.TotalPathAttributeLength, (int) this.WithdrawnRoutesLength, String.class));
+        this.NetworkLayerReachabilityInformation = ParserList.parseString((String) BinaryFunctions.bitsArrayToObject(bitsArray, 88 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength, bitsArray.length() - 24 - (int) this.TotalPathAttributeLength - (int) this.WithdrawnRoutesLength, String.class));
     }
 
-    public String packetToBitArray(){
-        String bitsArray = super.packetToBitArray() +
+    public String packetToBitArray() {
+        System.out.println("UpdateMessagePacket.packetToBitArray");
+
+        //   1 - OPEN - 00000001
+        //   2 - UPDATE - 00000010
+        //   3 - NOTIFICATION - 00000011
+        //   4 - KEEPALIVE - 00000100
+        String headerInBits = "00000010"; // 8 bits
+
+        String parsedWithdrawnRoutes = ParserList.parseList(this.WithdrawnRoutes);
+        String stringedWithdrawnRoutes = parsedWithdrawnRoutes.replaceAll("\\.", "/:/"); // Replace all dots with /:/ due to the fact that dots are used as separators in toBitsArray
+
+        String parsedNetworkLayerReachabilityInformation = ParserList.parseList(this.NetworkLayerReachabilityInformation);
+        String stringedNetworkLayerReachabilityInformation = parsedNetworkLayerReachabilityInformation.replaceAll("\\.", "/:/"); // Replace all dots with /:/
+
+        String pathAttributesInBits = this.PathAttributes.packetToBitArray();
+
+        this.WithdrawnRoutesLength = stringedWithdrawnRoutes.length();
+        this.TotalPathAttributeLength = pathAttributesInBits.length();
+
+        System.out.println("WithdrawnRoutesLength: " + this.WithdrawnRoutesLength);
+        System.out.println("TotalPathAttributeLength: " + this.TotalPathAttributeLength);
+        System.out.println("PathAttributes: " + pathAttributesInBits);
+        System.out.println("stringedWithdrawnRoutes: " + stringedWithdrawnRoutes);
+        System.out.println("stringedNetworkLayerReachabilityInformation: " + stringedNetworkLayerReachabilityInformation);
+
+        String bitsArray = headerInBits + super.packetToBitArray() +
                 BinaryFunctions.toBitsArray(this.WithdrawnRoutesLength, 16) +
                 BinaryFunctions.toBitsArray(this.TotalPathAttributeLength, 16) +
-                this.PathAttributes.packetToBitArray();
+                pathAttributesInBits;
 
-        String stringedWithdrawnRoutes = ParserList.parseList(this.WithdrawnRoutes);
         bitsArray += BinaryFunctions.toBitsArray(stringedWithdrawnRoutes, stringedWithdrawnRoutes.length());
 
-        String stringedNetworkLayerReachabilityInformation = ParserList.parseList(this.NetworkLayerReachabilityInformation);
         bitsArray += BinaryFunctions.toBitsArray(stringedNetworkLayerReachabilityInformation, stringedNetworkLayerReachabilityInformation.length());
 
         return bitsArray;
     }
+
     public long getWithdrawnRoutesLength() {
         return WithdrawnRoutesLength;
     }
@@ -91,5 +108,15 @@ public class UpdateMessagePacket extends BgpPacket {
         return NetworkLayerReachabilityInformation;
     }
 
-
+    @Override
+    public String toString() {
+        return "UpdateMessagePacket{" +
+                "WithdrawnRoutesLength=" + WithdrawnRoutesLength +
+                ", WithdrawnRoutes=" + WithdrawnRoutes +
+                ", TotalPathAttributeLength=" + TotalPathAttributeLength +
+                ", PathAttributes=" + PathAttributes +
+                ", NetworkLayerReachabilityInformation=" + NetworkLayerReachabilityInformation +
+                ", data='" + data +
+                '}';
+    }
 }

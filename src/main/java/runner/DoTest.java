@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 
 import components.*;
 import components.tblentries.PathAttributes;
+import components.tblentries.PathSegments;
 import multithread.*;
 import utils.ParseInputFile;
 
@@ -27,9 +28,9 @@ public class DoTest {
         Router r2 = Router.getRouterByIP(ipAddress2);
         RouterInterface i2 = r2.getRouterInterfaceByIP(ipAddress2);
 
-        if((!i1.getState().equals(BGPStates.Active) ||
+        if ((!i1.getState().equals(BGPStates.Active) ||
                 i1.getState().equals(BGPStates.Idle)) &&
-                    (!i2.getState().equals(BGPStates.Active) ||
+                (!i2.getState().equals(BGPStates.Active) ||
                         i2.getState().equals(BGPStates.Idle))) {
             // Send SYN message
             SendTcpPacket task = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0,
@@ -57,9 +58,9 @@ public class DoTest {
 
             // Change BGP state to OpenSent
             i1.setState(BGPStates.OpenSent);
-            System.out.println("\033[0;35m" + "[" + r1.getName()  + " - " + i1.getName() + "] BGP state : OpenSent" + "\033[0m");
+            System.out.println("\033[0;35m" + "[" + r1.getName() + " - " + i1.getName() + "] BGP state : OpenSent" + "\033[0m");
             i2.setState(BGPStates.OpenSent);
-            System.out.println("\033[0;35m" + "[" + r2.getName()  + " - " + i2.getName() + "] BGP state : OpenSent" + "\033[0m");
+            System.out.println("\033[0;35m" + "[" + r2.getName() + " - " + i2.getName() + "] BGP state : OpenSent" + "\033[0m");
         }
     }
 
@@ -70,10 +71,10 @@ public class DoTest {
 
         System.out.println("Enter router name followed by desired state: ");
 
-        while(wrongInput) {
+        while (wrongInput) {
             String line = input.nextLine();
 
-            if(line.equals("exit")) {
+            if (line.equals("exit")) {
                 wrongInput = false;
             } else {
                 String routerName = line.split(" ")[0];
@@ -88,7 +89,7 @@ public class DoTest {
                 }
             }
 
-            if(wrongInput) {
+            if (wrongInput) {
                 System.err.println("No router found with this name. Please try again or type \"exit\" to skip");
             }
         }
@@ -128,31 +129,7 @@ public class DoTest {
             }
         });
 
-        linkMap.entrySet().parallelStream().forEach(entry -> {
-            try {
-                List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
-                List<Map<Integer, String>> NetworkLayerReachabilityInformation;
-                PathAttributes PathAttributes;
-                long TotalPathAttributeLength = 0;
-                long WithdrawnRoutesLength = 0;
-
-                // filling lists with data
-                for (int i = 0; i < 3; i++) {
-                    Map<Integer, String> WithdrawnRoute = new HashMap<>();
-                    WithdrawnRoute.put(i, "192.168.0." + i);
-                }
-                for (int i = 0; i < 3; i++) {
-                    Map<Integer, String> NetworkLayerReachabilityInfo = new HashMap<>();
-                    NetworkLayerReachabilityInfo.put(i, "192.168.0." + i);
-                }
-
-
-                SendUpdateMessage task = new SendUpdateMessage(entry.getKey(), (String) entry.getValue());
-            } catch (InterruptedException e) {
-                System.err.println(e.getMessage());
-            }
-        });
-
+/*
         linkMap.entrySet().parallelStream().forEach(entry -> {
             SendOpenMessage task = new SendOpenMessage(entry.getKey(), (String) entry.getValue());
             ThreadPool.submit(task);
@@ -164,7 +141,48 @@ public class DoTest {
             SendKeepAliveMessage task = new SendKeepAliveMessage(entry.getKey(), (String) entry.getValue());
             ThreadPool.submit(task);
         });
+*/
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
+            List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
+            PathAttributes pathAttributes;
 
+            // filling lists with random data
+            Map<Integer, String> WithdrawnRoute = null;
+            for (int i = 0; i < 3; i++) {
+                WithdrawnRoute = new HashMap<>();
+                WithdrawnRoute.put(i, "192.168.0." + i);
+                WithdrawnRoutes.add(WithdrawnRoute);
+            }
+
+            Map<Integer, String> NetworkLayerReachabilityInfo = null;
+            for (int i = 0; i < 3; i++) {
+                NetworkLayerReachabilityInfo = new HashMap<>();
+                NetworkLayerReachabilityInfo.put(i, "122.168.0." + i);
+                NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
+            }
+
+            // creating path attributes for AS_PATH field
+            String[] pathSegmentsVal = new String[3];
+            for (int i = 0; i < 3; i++) {
+                pathSegmentsVal[i] = "192.198.0." + i;
+            }
+            PathSegments ps = new PathSegments("192.168.178.2", pathSegmentsVal);
+            PathSegments[] psList = new PathSegments[1];
+            psList[0] = ps;
+
+            pathAttributes = new PathAttributes("199.199.199.199", psList, "AS2");
+
+
+            System.out.println("Sending update message");
+
+
+            SendUpdateMessage task = new SendUpdateMessage("10.0.0.1", (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
+            ThreadPool.submit(task);
+
+        });
+
+/*
         // Select router to change state
         Thread.sleep(2000);
         Router shutdownRouter = changeRouterStateFromInput();
@@ -214,7 +232,7 @@ public class DoTest {
             });
         }
 
-
+*/
         // TODO continue here
 
 //        ThreadPool.stop();
