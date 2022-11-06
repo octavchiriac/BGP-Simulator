@@ -40,9 +40,15 @@ public class UpdateMessagePacket extends BgpPacket {
 
     public UpdateMessagePacket(String bitsArray) {
         super(bitsArray);
+
+        System.out.println("bitsArray arrived");
         this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 16, Long.class);
+        System.out.println("WithdrawnRoutesLength: " + this.WithdrawnRoutesLength);
         this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 72, 16, Long.class);
+        System.out.println("TotalPathAttributeLength: " + this.TotalPathAttributeLength);
+
         this.PathAttributes = new PathAttributes(bitsArray.substring(88, (int) this.TotalPathAttributeLength));
+        System.out.println(this.PathAttributes.toString());
 
 
         // TODO: Fix this

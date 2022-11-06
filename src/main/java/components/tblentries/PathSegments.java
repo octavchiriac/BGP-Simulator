@@ -14,6 +14,16 @@ public class PathSegments {
         this.pathSegmentValue = pathSegmentValue;
     }
 
+    public PathSegments(String bitsArray) {
+        super();
+        int pathSegmentValueSize = bitsArray.length() - 32;
+        String stringedPathSegmentValue;
+
+        this.destinationIp = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 8, String.class);
+        stringedPathSegmentValue = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 8, pathSegmentValueSize, String.class);
+        this.pathSegmentValue = stringedPathSegmentValue.split(" ");
+    }
+
     public String toBitArrayString() {
 
         String bitArrayString = "";

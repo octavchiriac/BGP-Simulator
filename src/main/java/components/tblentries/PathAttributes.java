@@ -32,18 +32,37 @@ public class PathAttributes {
         this.AGGREGATOR = AGGREGATOR;
     }
 
+    @Override
+    public String toString() {
+        return "PathAttributes{" +
+                "ORIGIN='" + ORIGIN + '\'' +
+                ", AS_PATH=" + Arrays.toString(AS_PATH) +
+                ", NEXT_HOP='" + NEXT_HOP + '\'' +
+                ", MULTI_EXIT_DISC='" + MULTI_EXIT_DISC + '\'' +
+                ", LOCAL_PREF='" + LOCAL_PREF + '\'' +
+                ", ATOMIC_AGGREGATE='" + ATOMIC_AGGREGATE + '\'' +
+                ", AGGREGATOR='" + AGGREGATOR + '\'' +
+                '}';
+    }
+
     public PathAttributes(String bitsArray) {
         super();
 
         int asPathSize = bitsArray.length() - 48;
+        String stringedAsPath;
 
         this.ORIGIN = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 8, String.class);
-        this.AS_PATH = (PathSegments[]) BinaryFunctions.bitsArrayToObject(bitsArray, 8, asPathSize, Arrays.class);
+        stringedAsPath = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 8, asPathSize, String.class);
         this.NEXT_HOP = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 24, 8, String.class);
         this.MULTI_EXIT_DISC = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 32, 8, String.class);
         this.LOCAL_PREF = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 8, String.class);
         this.ATOMIC_AGGREGATE = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 80, 8, String.class);
         this.AGGREGATOR = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 104, 8, String.class);
+
+        String[] asPathSegments = stringedAsPath.split("-");
+        for (String o : asPathSegments) {
+            this.AS_PATH = new PathSegments[asPathSegments];
+        }
     }
 
     public String getORIGIN() {
