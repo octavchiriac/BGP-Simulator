@@ -10,11 +10,8 @@ public class ParserList {
     // convert the list of maps to a string
     public static String parseList(List<Map<Integer,String>> list) {
         String result = "";
-        System.out.println("ParserList.parseList");
-        System.out.println("list: " + list);
         for (Map<Integer,String> o : list) {
             result += ParserList.MapToString(o) + ";";
-            System.out.println("result: " + result);
         }
         result.substring(0, result.length() - 1);
         return result;

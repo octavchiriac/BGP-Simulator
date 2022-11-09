@@ -46,10 +46,10 @@ public class PathAttributes {
     }
 
     public PathAttributes(String bitsArray) {
-        super();
-
         int asPathSize = bitsArray.length() - 48;
         String stringedAsPath;
+
+        System.out.println("PathAttributes - " + bitsArray);
 
         this.ORIGIN = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 8, String.class);
         stringedAsPath = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 8, asPathSize, String.class);
@@ -59,9 +59,20 @@ public class PathAttributes {
         this.ATOMIC_AGGREGATE = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 80, 8, String.class);
         this.AGGREGATOR = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 104, 8, String.class);
 
+        System.out.println("ORIGIN: " + this.ORIGIN);
+        System.out.println("STRINGED_ASPATH " + stringedAsPath);
+        System.out.println("NEXT_HOP: " + this.NEXT_HOP);
+        System.out.println("MULTI_EXIT_DISC: " + this.MULTI_EXIT_DISC);
+        System.out.println("LOCAL_PREF: " + this.LOCAL_PREF);
+        System.out.println("ATOMIC_AGGREGATE: " + this.ATOMIC_AGGREGATE);
+        System.out.println("AGGREGATOR: " + this.AGGREGATOR);
+
         String[] asPathSegments = stringedAsPath.split("-");
+        int i = 0;
+        this.AS_PATH = new PathSegments[asPathSegments.length];
         for (String o : asPathSegments) {
-            this.AS_PATH = new PathSegments[asPathSegments];
+            this.AS_PATH[i] = new PathSegments(o);
+            i++;
         }
     }
 

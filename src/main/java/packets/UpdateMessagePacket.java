@@ -5,6 +5,7 @@ import multithread.SendTcpPacket;
 import utils.BinaryFunctions;
 import utils.ParserList;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,11 +42,20 @@ public class UpdateMessagePacket extends BgpPacket {
     public UpdateMessagePacket(String bitsArray) {
         super(bitsArray);
 
+        System.out.println(super.toString());
+        System.out.println(super.packetToBitArray());
+        System.out.println(bitsArray.substring(0, 56));
+
         System.out.println("bitsArray arrived");
         this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 16, Long.class);
         System.out.println("WithdrawnRoutesLength: " + this.WithdrawnRoutesLength);
         this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 72, 16, Long.class);
         System.out.println("TotalPathAttributeLength: " + this.TotalPathAttributeLength);
+        System.out.println("Total pkt length: " + bitsArray.length());
+
+        System.out.println("PathAttributeLength in bits RECEIVED " + bitsArray.substring(72, 72 + 16));
+
+        System.out.println(bitsArray.substring(88, (int) this.TotalPathAttributeLength));
 
         this.PathAttributes = new PathAttributes(bitsArray.substring(88, (int) this.TotalPathAttributeLength));
         System.out.println(this.PathAttributes.toString());
@@ -76,11 +86,18 @@ public class UpdateMessagePacket extends BgpPacket {
         this.WithdrawnRoutesLength = stringedWithdrawnRoutes.length();
         this.TotalPathAttributeLength = pathAttributesInBits.length();
 
-        System.out.println("WithdrawnRoutesLength: " + this.WithdrawnRoutesLength);
-        System.out.println("TotalPathAttributeLength: " + this.TotalPathAttributeLength);
-        System.out.println("PathAttributes: " + pathAttributesInBits);
-        System.out.println("stringedWithdrawnRoutes: " + stringedWithdrawnRoutes);
-        System.out.println("stringedNetworkLayerReachabilityInformation: " + stringedNetworkLayerReachabilityInformation);
+        System.out.println("PacketHeader " + super.toString());
+        System.out.println("PacketHeader in bits " + super.packetToBitArray());
+
+        System.out.println("WithdrawnRoutesLength in BITS " + BinaryFunctions.toBitsArray(this.WithdrawnRoutesLength, 16));
+        System.out.println("TotalPathAttributeLength in BITS " + BinaryFunctions.toBitsArray(this.TotalPathAttributeLength, 16));
+        System.out.println("PathAttributeLength in BITS " + pathAttributesInBits);
+        System.out.println("WithdrawnRoutesLength in BITS " + BinaryFunctions.toBitsArray(this.WithdrawnRoutesLength, 16));
+        System.out.println("STRINGED WithdrawnRoutes in BITS " + stringedWithdrawnRoutes);
+        System.out.println("WithdrawnRoutes in BITS " + BinaryFunctions.toBitsArray(stringedWithdrawnRoutes, stringedWithdrawnRoutes.length()));
+        System.out.println("STRINGED NetworkLayerReachabilityInformation in BITS " + stringedNetworkLayerReachabilityInformation);
+        System.out.println("NetworkLayerREchabilityInformation in BITS " + BinaryFunctions.toBitsArray(stringedNetworkLayerReachabilityInformation, stringedNetworkLayerReachabilityInformation.length()));
+
 
         String bitsArray = headerInBits + super.packetToBitArray() +
                 BinaryFunctions.toBitsArray(this.WithdrawnRoutesLength, 16) +

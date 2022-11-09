@@ -179,7 +179,6 @@ public class DoTest {
 
             SendUpdateMessage task = new SendUpdateMessage("10.0.0.1", (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
             ThreadPool.submit(task);
-
         });
 
 /*
