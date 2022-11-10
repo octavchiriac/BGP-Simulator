@@ -2,11 +2,8 @@ package runner;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Semaphore;
-import java.util.stream.IntStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import components.*;
 import components.tblentries.PathAttributes;
@@ -16,8 +13,6 @@ import utils.ParseInputFile;
 
 import static components.Globals.linkMap;
 import static components.Globals.routers;
-import static java.lang.Math.sqrt;
-import static java.util.stream.Collectors.toList;
 
 public class DoTest {
 
@@ -141,44 +136,49 @@ public class DoTest {
             SendKeepAliveMessage task = new SendKeepAliveMessage(entry.getKey(), (String) entry.getValue());
             ThreadPool.submit(task);
         });
+        
 */
+        AtomicInteger leonardo = new AtomicInteger();
         linkMap.entrySet().parallelStream().forEach(entry -> {
-            List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
-            List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
-            PathAttributes pathAttributes;
+            if(leonardo.get() ==0) {
+                List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
+                List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
+                PathAttributes pathAttributes;
 
-            // filling lists with random data
-            Map<Integer, String> WithdrawnRoute = null;
-            for (int i = 0; i < 3; i++) {
-                WithdrawnRoute = new HashMap<>();
-                WithdrawnRoute.put(i, "192.168.0." + i);
-                WithdrawnRoutes.add(WithdrawnRoute);
+                // filling lists with random data
+                Map<Integer, String> WithdrawnRoute = null;
+                for (int i = 0; i < 3; i++) {
+                    WithdrawnRoute = new HashMap<>();
+                    WithdrawnRoute.put(i, "192.168.0." + i);
+                    WithdrawnRoutes.add(WithdrawnRoute);
+                }
+
+                Map<Integer, String> NetworkLayerReachabilityInfo = null;
+                for (int i = 0; i < 3; i++) {
+                    NetworkLayerReachabilityInfo = new HashMap<>();
+                    NetworkLayerReachabilityInfo.put(i, "122.168.0." + i);
+                    NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
+                }
+
+                // creating path attributes for AS_PATH field
+                String[] pathSegmentsVal = new String[3];
+                for (int i = 0; i < 3; i++) {
+                    pathSegmentsVal[i] = "192.198.0." + i;
+                }
+                PathSegments ps = new PathSegments("192.168.178.2", pathSegmentsVal);
+                PathSegments[] psList = new PathSegments[1];
+                psList[0] = ps;
+
+                pathAttributes = new PathAttributes("0", psList, "10.0.0.2");
+
+
+                System.out.println("Sending update message");
+
+
+                SendUpdateMessage task = new SendUpdateMessage("10.0.0.1", (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
+                ThreadPool.submit(task);
+                leonardo.getAndIncrement();
             }
-
-            Map<Integer, String> NetworkLayerReachabilityInfo = null;
-            for (int i = 0; i < 3; i++) {
-                NetworkLayerReachabilityInfo = new HashMap<>();
-                NetworkLayerReachabilityInfo.put(i, "122.168.0." + i);
-                NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
-            }
-
-            // creating path attributes for AS_PATH field
-            String[] pathSegmentsVal = new String[3];
-            for (int i = 0; i < 3; i++) {
-                pathSegmentsVal[i] = "192.198.0." + i;
-            }
-            PathSegments ps = new PathSegments("192.168.178.2", pathSegmentsVal);
-            PathSegments[] psList = new PathSegments[1];
-            psList[0] = ps;
-
-            pathAttributes = new PathAttributes("199.199.199.199", psList, "AS2");
-
-
-            System.out.println("Sending update message");
-
-
-            SendUpdateMessage task = new SendUpdateMessage("10.0.0.1", (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
-            ThreadPool.submit(task);
         });
 
 /*

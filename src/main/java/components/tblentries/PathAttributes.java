@@ -3,6 +3,7 @@ package components.tblentries;
 import utils.BinaryFunctions;
 import utils.ObjectSizeFetcher;
 
+import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -46,18 +47,16 @@ public class PathAttributes {
     }
 
     public PathAttributes(String bitsArray) {
-        int asPathSize = bitsArray.length() - 48;
+        int asPathSize = bitsArray.length() - 136;
         String stringedAsPath;
-
-        System.out.println("PathAttributes - " + bitsArray);
 
         this.ORIGIN = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 0, 8, String.class);
         stringedAsPath = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 8, asPathSize, String.class);
-        this.NEXT_HOP = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 24, 8, String.class);
-        this.MULTI_EXIT_DISC = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 32, 8, String.class);
-        this.LOCAL_PREF = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 8, String.class);
-        this.ATOMIC_AGGREGATE = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 80, 8, String.class);
-        this.AGGREGATOR = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 104, 8, String.class);
+        this.NEXT_HOP = (String) BinaryFunctions.bitsArrayToObject(bitsArray, asPathSize + 8, 32, Inet4Address.class);
+        this.MULTI_EXIT_DISC = (String) BinaryFunctions.bitsArrayToObject(bitsArray, asPathSize + 40, 32, String.class);
+        this.LOCAL_PREF = (String) BinaryFunctions.bitsArrayToObject(bitsArray, asPathSize + 72, 32, String.class);
+        this.ATOMIC_AGGREGATE = (String) BinaryFunctions.bitsArrayToObject(bitsArray, asPathSize + 104, 32, String.class);
+        this.AGGREGATOR = (String) BinaryFunctions.bitsArrayToObject(bitsArray, bitsArray.length() - 32, 32, String.class);
 
         System.out.println("ORIGIN: " + this.ORIGIN);
         System.out.println("STRINGED_ASPATH " + stringedAsPath);
@@ -126,32 +125,31 @@ public class PathAttributes {
         for (PathSegments pathSegment : AS_PATH) {
             stringedAsPathList += pathSegment.toBitArrayString() + "-";
         }
-        System.out.println("stringedAsPathList: " + stringedAsPathList);
 
-        if(this.NEXT_HOP.length() == 0){
-            this.NEXT_HOP = "00000000";
+        if(this.NEXT_HOP.length() == 0) {
+            this.NEXT_HOP = "000.000.000.000";
         }
-        if(this.MULTI_EXIT_DISC.length() == 0){
-            this.MULTI_EXIT_DISC = "00000000";
+        if(this.MULTI_EXIT_DISC.length() == 0 || this.MULTI_EXIT_DISC.length() > 3){
+            this.MULTI_EXIT_DISC = "000";
         }
-        if(this.LOCAL_PREF.length() == 0){
-            this.LOCAL_PREF = "00000000";
+        if(this.LOCAL_PREF.length() == 0 || this.LOCAL_PREF.length() > 3){
+            this.LOCAL_PREF = "000";
         }
-        if(this.ATOMIC_AGGREGATE.length() == 0){
-            this.ATOMIC_AGGREGATE = "00000000";
+        if(this.ATOMIC_AGGREGATE.length() == 0 || this.ATOMIC_AGGREGATE.length() > 3){
+            this.ATOMIC_AGGREGATE = "000";
         }
-        if(this.AGGREGATOR.length() == 0){
-            this.AGGREGATOR = "00000000";
+        if(this.AGGREGATOR.length() == 0 || this.AGGREGATOR.length() > 3){
+            this.AGGREGATOR = "000";
         }
 
         String bitsArray =
                 BinaryFunctions.toBitsArray(this.ORIGIN, 8) +
                         BinaryFunctions.toBitsArray(stringedAsPathList, stringedAsPathList.length()) +
-                        BinaryFunctions.toBitsArray(this.NEXT_HOP, 8) +
-                        BinaryFunctions.toBitsArray(this.MULTI_EXIT_DISC, 8) +
-                        BinaryFunctions.toBitsArray(this.LOCAL_PREF, 8) +
-                        BinaryFunctions.toBitsArray(this.ATOMIC_AGGREGATE, 8) +
-                        BinaryFunctions.toBitsArray(this.AGGREGATOR, 8);
+                        BinaryFunctions.toBitsArray(this.NEXT_HOP, 32) +
+                        BinaryFunctions.toBitsArray(this.MULTI_EXIT_DISC, 32) +
+                        BinaryFunctions.toBitsArray(this.LOCAL_PREF, 32) +
+                        BinaryFunctions.toBitsArray(this.ATOMIC_AGGREGATE, 32) +
+                        BinaryFunctions.toBitsArray(this.AGGREGATOR, 32);
         return bitsArray;
     }
 }

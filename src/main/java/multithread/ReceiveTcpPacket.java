@@ -105,7 +105,7 @@ public class ReceiveTcpPacket implements Runnable {
                     System.out.println("[" + srcRouterName + " -> " + destRouterName + "] UPDATE packet sucessfully received on interface " + interfaceName);
 
                     String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
-                    System.out.println("                PACKET RECEIVED - " + tcpPacket2.getData().substring(64)); // 17 bit di troppo DIOCANE
+                    //System.out.println("                PACKET RECEIVED - " + tcpPacket2.getData().substring(64));
                     BgpPacket bgpPacket2 = new UpdateMessagePacket(stringedPkt);
 
                     System.out.println(bgpPacket2.toString());
