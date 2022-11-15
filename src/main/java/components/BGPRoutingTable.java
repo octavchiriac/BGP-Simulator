@@ -1,6 +1,10 @@
 package components;
 
+import components.tblentries.PathAttributes;
+import components.tblentries.PathSegments;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class BGPRoutingTable {
 /*
@@ -11,18 +15,51 @@ public class BGPRoutingTable {
  * https://support.huawei.com/enterprise/en/doc/EDOC1000178110/81bd490c/bgp-routing-table
  */
 
-
+    //public ArrayList<PathAttributes> bestRoutes;
+    public HashMap<String, String> bestRoutes;
 
     public BGPRoutingTable() {
         super();
+        bestRoutes= new HashMap<String, String>();
+    }
+
+    /*
+        * This method is called when there is the need of updating the BGP Routing Table with the best paths from the RIB
+        * The best path can be changed also based on the policies (like shortest path, lowest cost, etc)
+     */
+    public void updateTable(TopologyTable topologyTable) {
+        //TODO: substitute the length of the string that contains the ASs with the real length of the path (e.g, search for the numers)
+
+        ArrayList<PathAttributes> listRIB = topologyTable.getListRIB();
+
+        for (PathAttributes entry : listRIB) {
+            String tmpNextHop = entry.getNEXT_HOP();
+            PathSegments[] tmpPath= entry.getAS_PATH();
+            for (PathSegments pathSegment : tmpPath) {
+                String tmpDestinationIp = pathSegment.getDestinationIp();
+                String[] tmpPathSegmentValue = pathSegment.getPathSegmentValue();
+                String tmpBestPath = tmpPathSegmentValue[0];
+                //search the shortest path for each destinationIp
+                for (int i = 1; i < tmpPathSegmentValue.length; i++) {
+                    if (tmpPathSegmentValue[i].length() < tmpBestPath.length()) {
+                        tmpBestPath = tmpPathSegmentValue[i];
+                    }
+                }
+                //if the destination ip is already inside, check if the bestpath is good
+                if (bestRoutes.get(tmpDestinationIp) != null) {
+                    //if the best path is shorter than the one already in, update the best path
+                    if (tmpBestPath.length() < bestRoutes.get(tmpDestinationIp).length()) {
+                        bestRoutes.put(tmpDestinationIp, tmpBestPath);
+                    }
+                }
+            }
+        }
+
 
     }
 
-    public void updateTable(TopologyTable topologyTable) {
-        //TODO: implement update of the table by searching the best path on the TopologyTable
-        //ArrayList<TopologyTableEntry> listRIB=new ArrayList<TopologyTableEntry>();
-        //listRIB=topologyTable.getListRIB();
-
+    public HashMap<String, String> getBestRoutes() {
+        return bestRoutes;
     }
 
 
