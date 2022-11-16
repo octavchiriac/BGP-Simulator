@@ -15,7 +15,7 @@ public class BGPRoutingTable {
  * https://support.huawei.com/enterprise/en/doc/EDOC1000178110/81bd490c/bgp-routing-table
  */
 
-    //public ArrayList<PathAttributes> bestRoutes;
+    // the new BGP routing table will have the pairs (DestinationIP, BestPath)
     public HashMap<String, String> bestRoutes;
 
     public BGPRoutingTable() {
