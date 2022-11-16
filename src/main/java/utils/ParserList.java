@@ -21,7 +21,7 @@ public class ParserList {
     public static String MapToString(Map<Integer,String> map) {
         StringBuilder mapAsString = new StringBuilder("{");
         for (Integer key: map.keySet()) {
-            mapAsString.append(key + "=" + map.get(key));
+            mapAsString.append(key + "=" + map.get(key) + ",");
         }
         return mapAsString.append("}").toString();
     }
@@ -40,7 +40,11 @@ public class ParserList {
     //for each entry in the string (which corresponds to a map entry), split the string and convert it into a map
     public static Map<Integer,String> StringToMap(String mapString){
         Map<Integer,String> map = new HashMap<Integer,String>();
-        String[] mapStringArray = mapString.split(";");
+        String tmp; //temporary string to store the key and value
+        tmp = mapString.replace("{", "");
+        tmp = tmp.replace("}", "");
+        mapString = tmp;
+        String[] mapStringArray = mapString.split(",");
         for (String o : mapStringArray) {
             map.put(Integer.parseInt(o.split("=")[0]), o.split("=")[1]);
         }

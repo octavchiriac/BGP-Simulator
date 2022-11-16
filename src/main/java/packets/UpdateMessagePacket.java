@@ -40,37 +40,26 @@ public class UpdateMessagePacket extends BgpPacket {
     }
 
     public UpdateMessagePacket(String bitsArray) {
-        super(bitsArray);
+        super(bitsArray); // version, as, holdTime, id --> HEADER
 
-        System.out.println(super.toString());
-        System.out.println(super.packetToBitArray());
-        System.out.println(bitsArray.substring(0, 56));
-
-        System.out.println("bitsArray arrived");
         this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 16, Long.class);
-        System.out.println("WithdrawnRoutesLength: " + this.WithdrawnRoutesLength);
         this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 72, 16, Long.class);
-        System.out.println("TotalPathAttributeLength: " + (int) this.TotalPathAttributeLength);
 
         this.PathAttributes = new PathAttributes(bitsArray.substring(88, 88 + (int) this.TotalPathAttributeLength));
-        System.out.println(this.PathAttributes.toString());
 
+        String stringedWithdrawnRoutes = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 88 + (int) this.TotalPathAttributeLength,
+                (int) this.WithdrawnRoutesLength, String.class);
+        String parsedWithdrawnRoutes = stringedWithdrawnRoutes.replaceAll("/:/", "\\."); // Replace : with .
+        this.WithdrawnRoutes = ParserList.parseString(parsedWithdrawnRoutes);
 
-        // TODO: Fix this
-        System.out.println("WithdrawnRoutesLength: " + this.WithdrawnRoutesLength);
-        System.out.println(bitsArray.substring(88 + (int) this.TotalPathAttributeLength));
-
-        String stringedWithdrawnRoutes = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 88 + (int) this.TotalPathAttributeLength, (int) this.WithdrawnRoutesLength, String.class);
-        this.WithdrawnRoutes = ParserList.parseString(stringedWithdrawnRoutes);
-
-        System.out.println("stringedWithdrawnRoutes: " + stringedWithdrawnRoutes.toString());
-
-        this.NetworkLayerReachabilityInformation = ParserList.parseString((String) BinaryFunctions.bitsArrayToObject(bitsArray, 88 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength, bitsArray.length() - 24 - (int) this.TotalPathAttributeLength - (int) this.WithdrawnRoutesLength, String.class));
+        String stringedNetworkLayerReachabilityInformation = (String) BinaryFunctions.bitsArrayToObject(bitsArray,
+                88 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength,
+                bitsArray.length() - (88 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength), String.class);
+        String parsedNetworkLayerReachabilityInformation = stringedNetworkLayerReachabilityInformation.replaceAll("/:/", "\\."); // Replace : with .
+        this.NetworkLayerReachabilityInformation = ParserList.parseString(parsedNetworkLayerReachabilityInformation);
     }
 
     public String packetToBitArray() {
-        System.out.println("UpdateMessagePacket.packetToBitArray");
-
         //   1 - OPEN - 00000001
         //   2 - UPDATE - 00000010
         //   3 - NOTIFICATION - 00000011
@@ -85,15 +74,8 @@ public class UpdateMessagePacket extends BgpPacket {
 
         String pathAttributesInBits = this.PathAttributes.packetToBitArray();
 
-        this.WithdrawnRoutesLength = stringedWithdrawnRoutes.length();
+        this.WithdrawnRoutesLength = BinaryFunctions.toBitsArray(stringedWithdrawnRoutes, stringedWithdrawnRoutes.length()).length();
         this.TotalPathAttributeLength = pathAttributesInBits.length();
-
-        System.out.println("WithdrawnRoutesLength in BITS " + BinaryFunctions.toBitsArray(this.WithdrawnRoutesLength, 16));
-        System.out.println("STRINGED WithdrawnRoutes in BITS " + stringedWithdrawnRoutes);
-        System.out.println("WithdrawnRoutes in BITS " + BinaryFunctions.toBitsArray(stringedWithdrawnRoutes, stringedWithdrawnRoutes.length()));
-        System.out.println("STRINGED NetworkLayerReachabilityInformation in BITS " + stringedNetworkLayerReachabilityInformation);
-        System.out.println("NetworkLayerREchabilityInformation in BITS " + BinaryFunctions.toBitsArray(stringedNetworkLayerReachabilityInformation, stringedNetworkLayerReachabilityInformation.length()));
-
 
         String bitsArray = headerInBits + super.packetToBitArray() +
                 BinaryFunctions.toBitsArray(this.WithdrawnRoutesLength, 16) +
@@ -130,12 +112,12 @@ public class UpdateMessagePacket extends BgpPacket {
     @Override
     public String toString() {
         return "UpdateMessagePacket{" +
-                "WithdrawnRoutesLength=" + WithdrawnRoutesLength +
+                super.toString() +
+                ", WithdrawnRoutesLength=" + WithdrawnRoutesLength +
                 ", WithdrawnRoutes=" + WithdrawnRoutes +
                 ", TotalPathAttributeLength=" + TotalPathAttributeLength +
                 ", PathAttributes=" + PathAttributes +
                 ", NetworkLayerReachabilityInformation=" + NetworkLayerReachabilityInformation +
-                ", data='" + data +
                 '}';
     }
 }

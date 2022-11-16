@@ -58,14 +58,6 @@ public class PathAttributes {
         this.ATOMIC_AGGREGATE = (String) BinaryFunctions.bitsArrayToObject(bitsArray, asPathSize + 104, 32, String.class);
         this.AGGREGATOR = (String) BinaryFunctions.bitsArrayToObject(bitsArray, bitsArray.length() - 32, 32, String.class);
 
-        System.out.println("ORIGIN: " + this.ORIGIN);
-        System.out.println("STRINGED_ASPATH " + stringedAsPath);
-        System.out.println("NEXT_HOP: " + this.NEXT_HOP);
-        System.out.println("MULTI_EXIT_DISC: " + this.MULTI_EXIT_DISC);
-        System.out.println("LOCAL_PREF: " + this.LOCAL_PREF);
-        System.out.println("ATOMIC_AGGREGATE: " + this.ATOMIC_AGGREGATE);
-        System.out.println("AGGREGATOR: " + this.AGGREGATOR);
-
         String[] asPathSegments = stringedAsPath.split("-");
         int i = 0;
         this.AS_PATH = new PathSegments[asPathSegments.length];

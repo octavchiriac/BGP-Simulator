@@ -52,7 +52,7 @@ public class SendUpdateMessage implements Runnable {
 
         BgpPacket packet1 = new UpdateMessagePacket(BGP_VERSION, Integer.parseInt(i1.getAs()), HOLD_TIMER, (long) Math.abs(Math.random() * 100000),
                 this.WithdrawnRoutes, this.PathAttributes, this.NetworkLayerReachabilityInformation);
-        //System.out.println("                PACKET SENT :( " + packet1.packetToBitArray());
+
         String bitArrayBgp1 = packet1.packetToBitArray();
 
         try {

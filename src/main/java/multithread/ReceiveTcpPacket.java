@@ -69,7 +69,10 @@ public class ReceiveTcpPacket implements Runnable {
                  * So maybe try to differentiate from the first bit of the data encapsulated as BGP packet(?)
                  * For example, every OPEN packet starts with the BGP version which is 4, so every packet starts like
                  * 0000010.... -> every 6th bit is 1....you can see how update packets will look like in binary
-                 * and maybe try doing this to differentiate */
+                 * and maybe try doing this to differentiate
+                 *
+                 * I set the 6th bit as 1 to differentiate the UPDATE packets from the other ones
+                 * */
 
                 // Receiving KEEPALIVE packet
                 if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().length() == 0) {
@@ -101,15 +104,19 @@ public class ReceiveTcpPacket implements Runnable {
                     // Change BGP state to OpenConfirm
                     destInt.setState(BGPStates.OpenConfirm);
                     System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP state : OpenConfirm" + "\033[0m");
-                } else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(6) == '1') {
+                }
+
+                // Receiving UPDATE packet
+                else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(6) == '1') {
                     System.out.println("[" + srcRouterName + " -> " + destRouterName + "] UPDATE packet sucessfully received on interface " + interfaceName);
 
                     String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
-                    //System.out.println("                PACKET RECEIVED - " + tcpPacket2.getData().substring(64));
                     BgpPacket bgpPacket2 = new UpdateMessagePacket(stringedPkt);
 
                     System.out.println(bgpPacket2.toString());
 
+                    System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP state : Updated" + "\033[0m");
+                    //TODO: Update routing tables
                 }
 
                 // Receiving SYN + ACK packet
