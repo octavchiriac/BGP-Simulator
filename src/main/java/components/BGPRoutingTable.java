@@ -28,8 +28,6 @@ public class BGPRoutingTable {
         * The best path can be changed also based on the policies (like shortest path, lowest cost, etc)
      */
     public void updateTable(TopologyTable topologyTable) {
-        //TODO: substitute the length of the string that contains the ASs with the real length of the path (e.g, search for the numers)
-
         ArrayList<PathAttributes> listRIB = topologyTable.getListRIB();
 
         for (PathAttributes entry : listRIB) {
@@ -41,14 +39,15 @@ public class BGPRoutingTable {
                 String tmpBestPath = tmpPathSegmentValue[0];
                 //search the shortest path for each destinationIp
                 for (int i = 1; i < tmpPathSegmentValue.length; i++) {
-                    if (tmpPathSegmentValue[i].length() < tmpBestPath.length()) {
+                    // use the split with "," to get the number of AS from which the packets will pass, so we can take the shortest path
+                    if (tmpPathSegmentValue[i].split(",").length < tmpBestPath.split(",").length) {
                         tmpBestPath = tmpPathSegmentValue[i];
                     }
                 }
                 //if the destination ip is already inside, check if the bestpath is good
                 if (bestRoutes.get(tmpDestinationIp) != null) {
                     //if the best path is shorter than the one already in, update the best path
-                    if (tmpBestPath.length() < bestRoutes.get(tmpDestinationIp).length()) {
+                    if (tmpBestPath.split(",").length < bestRoutes.get(tmpDestinationIp).split(",").length) {
                         bestRoutes.put(tmpDestinationIp, tmpBestPath);
                     }
                 }
