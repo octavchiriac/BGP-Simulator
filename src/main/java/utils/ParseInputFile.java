@@ -18,7 +18,7 @@ import static components.Globals.linkMap;
 
 public class ParseInputFile {
 
-	static String FILENAME = "inputs.json";
+	static String FILENAME = "inputsLong.json";
 	static String content;
 
 	public void parseRouterInterfaces() throws IOException {
