@@ -9,6 +9,7 @@ import components.*;
 import components.tblentries.PathAttributes;
 import components.tblentries.PathSegments;
 import multithread.*;
+import org.apache.commons.lang3.ArrayUtils;
 import utils.ParseInputFile;
 
 import static components.Globals.linkMap;
@@ -86,6 +87,53 @@ public class DoTest {
 
             if (wrongInput) {
                 System.err.println("No router found with this name. Please try again or type \"exit\" to skip");
+            }
+        }
+        return changedRouter;
+    }
+
+    /* It is more difficult to do more modifications...will try later if we have time
+     * Insert following lines to use and verify method
+     *  Router changedRouter = addEntryInRoutingTable();
+     *  changedRouter.getTopologyTable().printTable();
+     */
+    private static Router addEntryInRoutingTable() {
+        boolean wrongInput = true;
+        Router changedRouter = null;
+        Scanner input = new Scanner(System.in);
+
+        System.out.println("Enter router name followed by desired entry " +
+                "<DESTINATION_IP AS1,AS2,..ASn NEXT_HOP> : ");
+
+        while (wrongInput) {
+            String line = input.nextLine();
+            if (line.equals("exit")) {
+                wrongInput = false;
+            } else {
+                    String routerName = line.substring(0, line.indexOf(" "));
+                    String tableEntry = line.substring(line.indexOf(" ") + 1);
+
+                    if (Globals.routerNames.contains(routerName)) {
+                        wrongInput = false;
+                        Router r = Router.getRouterByName(routerName);
+                        changedRouter = r;
+
+                        String destinationIp = tableEntry.split(" ")[0];
+                        String asList = tableEntry.split(" ")[1];
+                        String nextHop = tableEntry.split(" ")[2];
+                        String[] asArray = asList.split(",");
+
+                        TopologyTable topologyTable = r.getTopologyTable();
+
+                        topologyTable.insertNewEntry("0.0.0.0",
+                                ArrayUtils.toArray(new PathSegments(destinationIp, asArray)), nextHop);
+                    }
+                }
+
+            if (wrongInput) {
+                System.err.println("No router found with this name. Please try again or type \"exit\" to skip");
+            } else {
+                System.out.println("Route added!");
             }
         }
         return changedRouter;
