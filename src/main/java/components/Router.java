@@ -19,7 +19,7 @@ public class Router implements Runnable {
     private ArrayList<RouterInterface> interfaces;
     private boolean isEnabled;
     private boolean isRestarted;
-    //private RoutingTableEntry routingTable;
+    private TopologyTable topologyTable;
     public  BGPRoutingTable routingTable;
     private BlockingQueue<String> queue ;
     private NeighborTable neighborTable;
@@ -34,7 +34,8 @@ public class Router implements Runnable {
         this.neighborTable = new NeighborTable();
         this.queue = new LinkedBlockingQueue<>();
         this.tcpConnectedRouters = new ArrayList<>();
-        this.routingTable=new BGPRoutingTable();
+        this.routingTable = new BGPRoutingTable();
+        this.topologyTable = new TopologyTable();
     }
 
     public long getId() {
@@ -111,6 +112,10 @@ public class Router implements Runnable {
     public NeighborTable getNeighborTable() {
 		return neighborTable;
 	}
+
+    public TopologyTable getTopologyTable() {
+        return topologyTable;
+    }
 
     public ArrayList<Router> getTcpConnectedRouters() {
         return tcpConnectedRouters;
