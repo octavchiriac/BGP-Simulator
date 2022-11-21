@@ -121,6 +121,10 @@ public class Router implements Runnable {
         routingTable.updateTable(topologyTable);
     }
 
+    public void printRoutingTable(){
+        System.out.println(routingTable.toString());
+    }
+
     public ArrayList<Router> getTcpConnectedRouters() {
         return tcpConnectedRouters;
     }

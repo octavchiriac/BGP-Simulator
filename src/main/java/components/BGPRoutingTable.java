@@ -20,7 +20,7 @@ public class BGPRoutingTable {
 
     public BGPRoutingTable() {
         super();
-        bestRoutes= new HashMap<String, String>();
+        bestRoutes = new HashMap<String, String>();
     }
 
     /*
@@ -61,5 +61,12 @@ public class BGPRoutingTable {
         return bestRoutes;
     }
 
-
+    @Override
+    public String toString() {
+        String result = "";
+        for (String key : bestRoutes.keySet()) {
+            result += "|Destination IP: " + key + " | Best Path: " + bestRoutes.get(key) + ";";
+        }
+        return result;
+    }
 }
