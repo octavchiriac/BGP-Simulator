@@ -1,5 +1,6 @@
 package components;
 
+import components.tblentries.PathSegments;
 import multithread.ReceiveTcpPacket;
 import multithread.SendTcpPacket;
 import multithread.ThreadPool;
@@ -23,6 +24,8 @@ public class Router implements Runnable {
     public  BGPRoutingTable routingTable;
     private BlockingQueue<String> queue ;
     private NeighborTable neighborTable;
+
+    private TopologyTable topologyTable;
     private ArrayList<Router> tcpConnectedRouters;
 
     public Router(String name) {
@@ -35,6 +38,7 @@ public class Router implements Runnable {
         this.queue = new LinkedBlockingQueue<>();
         this.tcpConnectedRouters = new ArrayList<>();
         this.routingTable=new BGPRoutingTable();
+        this.topologyTable=new TopologyTable();
     }
 
     public long getId() {
@@ -98,19 +102,24 @@ public class Router implements Runnable {
         return routingTable;
     }
 
-    public void insertInRoutingTable(String localRouterId, int localASNumber, String paths, int routeDuration, String advertisedRouterId, String nextHop, String outInterface, String pathAS) {
-        //TODO: check the parameters
-        //routingTable.setBGPRoutingTable(localRouterId, localASNumber, paths, routeDuration, advertisedRouterId, nextHop, outInterface, pathAS);
-    }
+
 
     //function to insert values inside the routing table based on the neighbor table
-    public void insertFromNeighbour() {
-        //if(neighborTable!=null) routingTable.setFromNeighbour(neighborTable);
+    public void insertFromNeighbour(String destinationIP, String destinationAS) {
+        neighborTable.addNeighbor(destinationIP, destinationAS);
     }
-    
+
     public NeighborTable getNeighborTable() {
 		return neighborTable;
 	}
+
+    public void setTopologyTableEntry(String origin, PathSegments[] asPath, String nextHop){
+        topologyTable.insertNewEntry(origin, asPath, nextHop);
+    }
+
+    public void updateBGPRoutingTable(TopologyTable topologyTable){
+        routingTable.updateTable(topologyTable);
+    }
 
     public ArrayList<Router> getTcpConnectedRouters() {
         return tcpConnectedRouters;

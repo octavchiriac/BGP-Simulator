@@ -40,14 +40,14 @@ public class BGPRoutingTable {
                 //search the shortest path for each destinationIp
                 for (int i = 1; i < tmpPathSegmentValue.length; i++) {
                     // use the split with "," to get the number of AS from which the packets will pass, so we can take the shortest path
-                    if (tmpPathSegmentValue[i].split(",").length < tmpBestPath.split(",").length) {
+                    if (tmpPathSegmentValue[i].split(";").length < tmpBestPath.split(";").length) {
                         tmpBestPath = tmpPathSegmentValue[i];
                     }
                 }
                 //if the destination ip is already inside, check if the bestpath is good
                 if (bestRoutes.get(tmpDestinationIp) != null) {
                     //if the best path is shorter than the one already in, update the best path
-                    if (tmpBestPath.split(",").length < bestRoutes.get(tmpDestinationIp).split(",").length) {
+                    if (tmpBestPath.split(";").length < bestRoutes.get(tmpDestinationIp).split(";").length) {
                         bestRoutes.put(tmpDestinationIp, tmpBestPath);
                     }
                 }

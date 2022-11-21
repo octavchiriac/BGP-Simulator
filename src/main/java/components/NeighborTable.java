@@ -1,6 +1,7 @@
 package components;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /*
  * "BGP Neighbor Table – table containing information about BGP neighbors"
@@ -9,49 +10,34 @@ import java.util.ArrayList;
  */
 public class NeighborTable {
 
-	public ArrayList<String> neighborsIp;
-	public ArrayList<String> neighborsAs;
+	// pair neighborIp, neighborAS
+	public HashMap<String,String> neighborInfo;
 
 	public NeighborTable(){
 		super();
-		neighborsIp = new ArrayList<String>();
-		neighborsAs = new ArrayList<String>();
+		neighborInfo = new HashMap<String,String>();
 	}
 
 	public void addNeighbor(String ip, String as){
-		neighborsIp.add(ip);
-		neighborsAs.add(as);
+		neighborInfo.put(ip, as);
 	}
 
 	public void editNeighbor(String ip, String newIp, String newAs){
-		int index = neighborsIp.indexOf(ip);
-		neighborsIp.set(index, newIp);
-		neighborsAs.set(index, newAs);
+		neighborInfo.remove(ip);
+		neighborInfo.put(newIp, newAs);
 	}
 
 	public void deleteNeighbor(String ip){
-		int index = neighborsIp.indexOf(ip);
-		neighborsIp.remove(index);
-		neighborsAs.remove(index);
+		neighborInfo.remove(ip);
 	}
 
-	public ArrayList<String> getNeighborsIp() {
-		return neighborsIp;
-	}
-
-	public ArrayList<String> getNeighborsAs() {
-		return neighborsAs;
+	public HashMap<String, String> getNeighborInfo() {
+		return neighborInfo;
 	}
 
 
 	@Override
 	public String toString() {
-		String result = "";
-		
-		for(int i = 0; i < neighborsIp.size(); i++) {
-			result += "Neighbor IP: " + neighborsIp.get(i) + " Neighbor AS: " + neighborsAs.get(i) + "\n";
-		}
-
-		return result;
+		return "NeighborTable [neighborInfo=" + neighborInfo + "]";
 	}
 }

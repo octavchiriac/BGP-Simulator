@@ -124,7 +124,7 @@ public class DoTest {
             }
         });
 
-/*
+
         linkMap.entrySet().parallelStream().forEach(entry -> {
             SendOpenMessage task = new SendOpenMessage(entry.getKey(), (String) entry.getValue());
             ThreadPool.submit(task);
@@ -137,7 +137,7 @@ public class DoTest {
             ThreadPool.submit(task);
         });
         
-*/
+
         AtomicInteger leonardo = new AtomicInteger();
         linkMap.entrySet().parallelStream().forEach(entry -> {
             if(leonardo.get() ==0) {
@@ -181,7 +181,7 @@ public class DoTest {
             }
         });
 
-/*
+
         // Select router to change state
         Thread.sleep(2000);
         Router shutdownRouter = changeRouterStateFromInput();
@@ -231,7 +231,7 @@ public class DoTest {
             });
         }
 
-*/
+
         // TODO continue here
 
 //        ThreadPool.stop();
