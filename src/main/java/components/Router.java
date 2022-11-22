@@ -20,12 +20,11 @@ public class Router implements Runnable {
     private ArrayList<RouterInterface> interfaces;
     private boolean isEnabled;
     private boolean isRestarted;
-    //private RoutingTableEntry routingTable;
+    private TopologyTable topologyTable;
     public  BGPRoutingTable routingTable;
     private BlockingQueue<String> queue ;
     private NeighborTable neighborTable;
 
-    private TopologyTable topologyTable;
     private ArrayList<Router> tcpConnectedRouters;
 
     public Router(String name) {
@@ -37,8 +36,8 @@ public class Router implements Runnable {
         this.neighborTable = new NeighborTable();
         this.queue = new LinkedBlockingQueue<>();
         this.tcpConnectedRouters = new ArrayList<>();
-        this.routingTable=new BGPRoutingTable();
-        this.topologyTable=new TopologyTable();
+        this.routingTable = new BGPRoutingTable();
+        this.topologyTable = new TopologyTable();
     }
 
     public long getId() {
@@ -113,6 +112,7 @@ public class Router implements Runnable {
 		return neighborTable;
 	}
 
+
     public void setTopologyTableEntry(String origin, PathSegments[] asPath, String nextHop){
         topologyTable.insertNewEntry(origin, asPath, nextHop);
     }
@@ -121,8 +121,12 @@ public class Router implements Runnable {
         routingTable.updateTable(topologyTable);
     }
 
-    public void printRoutingTable(){
+    public void printRoutingTable() {
         System.out.println(routingTable.toString());
+    }
+
+    public TopologyTable getTopologyTable() {
+        return topologyTable;
     }
 
     public ArrayList<Router> getTcpConnectedRouters() {
