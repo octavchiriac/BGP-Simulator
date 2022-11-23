@@ -108,7 +108,7 @@ public class ReceiveTcpPacket implements Runnable {
 
                 // Receiving UPDATE packet
                 else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(6) == '1') {
-
+                    boolean isUpdated;
                     // check dest router state, if =/= Established, drop packet
                     if (destInt != null && destInt.getState() != BGPStates.Established) {
                         throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Destination router is not in Established state. Packet dropped!");
@@ -122,7 +122,7 @@ public class ReceiveTcpPacket implements Runnable {
 
                     //TODO: decision process by trust and vote
                     //insert the entry in the table
-                    updateTable(srcRouterName,destRouterName,bgpPacket2);
+                    isUpdated=updateTable(srcRouterName,destRouterName,bgpPacket2);
 
                     System.out.println(bgpPacket2.toString());
 
@@ -130,7 +130,6 @@ public class ReceiveTcpPacket implements Runnable {
                     System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP state : Updated" + "\033[0m");
                     //TODO: Update routing tables
                     //TODO: Send UPDATE packet to all neighbors
-                    boolean isUpdated = true;
                     if (isUpdated) {
 
                     }
