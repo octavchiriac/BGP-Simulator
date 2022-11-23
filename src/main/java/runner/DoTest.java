@@ -219,9 +219,7 @@ public class DoTest {
 
                 pathAttributes = new PathAttributes("0", psList, "10.0.0.2");
 
-
-                System.out.println("Sending update message");
-
+                System.out.println("Sending update message to " + entry.getKey());
 
                 SendUpdateMessage task = new SendUpdateMessage("10.0.0.1", (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
                 ThreadPool.submit(task);

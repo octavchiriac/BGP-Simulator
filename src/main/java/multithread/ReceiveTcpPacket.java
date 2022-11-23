@@ -1,11 +1,9 @@
 package multithread;
 
 import components.*;
-import components.tblentries.PathAttributes;
-import components.tblentries.PathSegments;
-import org.apache.commons.lang3.ArrayUtils;
 import packets.*;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -114,7 +112,7 @@ public class ReceiveTcpPacket implements Runnable {
                     boolean isUpdated;
                     // check dest router state, if =/= Established, drop packet
                     if (destInt != null && destInt.getState() != BGPStates.Established) {
-                        throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Destination router is not in Established state. Packet dropped!");
+                        throw new Exception("[" + srcRouterName + ":" + srcInt.getName() + " -> " + destRouterName + ":" + destInt.getName() + "] Destination router is not in Established state. Packet dropped!");
                     }
 
                     System.out.println("[" + srcRouterName + " -> " + destRouterName + "] UPDATE packet sucessfully received on interface " + interfaceName);
@@ -125,16 +123,27 @@ public class ReceiveTcpPacket implements Runnable {
 
                     //TODO: decision process by trust and vote
                     //insert the entry in the table
-                    isUpdated=updateTable(srcRouterName,destRouterName,bgpPacket2);
+                    isUpdated = updateTable(srcRouterName, destRouterName, bgpPacket2);
 
-                    System.out.println(bgpPacket2.toString());
+                    System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP tables : " + isUpdated + "\033[0m");
 
-
-                    System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP state : Updated" + "\033[0m");
-                    //TODO: Update routing tables
-                    //TODO: Send UPDATE packet to all neighbors
+                    //Send UPDATE packet to all neighbors
+                    LinkedList<Object> listOfChanges = new LinkedList<Object>();
+                    listOfChanges.push(new Object());
+                    listOfChanges.push(new Object());
                     if (isUpdated) {
-
+                        // get router's neighbors
+                        dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
+                            // avoids to send update to the router that sent the update in the first place
+                            if (!sourceIpAddress.equals(key)) {
+                                // send an update to neighbor for each change
+                                for (Object o : listOfChanges) {
+                                    System.out.println("[" + dest.getName() + " -> " + key + "] Sending UPDATE packet to neighbor " + key);
+                                    // SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key, o.withdrawnRoutes, o.pathAttributes, o.networkLayerReachabilityInformation);
+                                    // ThreadPool.submit(task);
+                                }
+                            }
+                        });
                     }
 
                 }
@@ -170,7 +179,7 @@ public class ReceiveTcpPacket implements Runnable {
     }
 
     //takes the update message and insert the value in the table, return a boolean if the entry if something has changed
-    public boolean updateTable(String srcRouterName,String destRouterName, BgpPacket bgpPacket){
+    public boolean updateTable(String srcRouterName, String destRouterName, BgpPacket bgpPacket) {
         //get the router by the name
         boolean changed = false;
         if (Globals.routerNames.contains(destRouterName)) {
@@ -191,7 +200,7 @@ public class ReceiveTcpPacket implements Runnable {
 
             //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
             //TODO: check if the origin of the bgpPacket is the same as the srcRouterName
-            topologyTable.insertNewEntry(((UpdateMessagePacket)bgpPacket).getPathAttributes());
+            topologyTable.insertNewEntry(((UpdateMessagePacket) bgpPacket).getPathAttributes());
 
             //if something changed, return true
             //TODO: return what has changed
