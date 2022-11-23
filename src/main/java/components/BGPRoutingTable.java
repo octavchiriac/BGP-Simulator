@@ -43,7 +43,6 @@ public class BGPRoutingTable {
                     // use the split with "," to get the number of AS from which the packets will pass, so we can take the shortest path
                     if (tmpPathSegmentValue[i].split(";").length < tmpBestPath.split(";").length) {
                         tmpBestPath = tmpPathSegmentValue[i];
-                        changed = true;
                     }
                 }
                 //if the destination ip is already inside, check if the bestpath is good
@@ -51,6 +50,7 @@ public class BGPRoutingTable {
                     //if the best path is shorter than the one already in, update the best path
                     if (tmpBestPath.split(";").length < bestRoutes.get(tmpDestinationIp).split(";").length) {
                         bestRoutes.put(tmpDestinationIp, tmpBestPath);
+                        changed = true;
                     }
                 }
             }

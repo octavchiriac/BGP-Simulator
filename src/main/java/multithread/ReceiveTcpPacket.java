@@ -186,7 +186,6 @@ public class ReceiveTcpPacket implements Runnable {
                     String prefix = entry2.getValue();
                     int length = entry2.getKey();
                     topologyTable.removeEntryByIp(prefix);
-                    changed = true;
                 }
             }
 
