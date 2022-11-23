@@ -6,6 +6,9 @@ import components.tblentries.PathSegments;
 import org.apache.commons.lang3.ArrayUtils;
 import packets.*;
 
+import java.util.List;
+import java.util.Map;
+
 import static components.Router.getRouterByIP;
 import static runner.DoTest.establishTcpConnection;
 
@@ -173,8 +176,19 @@ public class ReceiveTcpPacket implements Runnable {
         if (Globals.routerNames.contains(destRouterName)) {
 
             Router r = Router.getRouterByName(destRouterName);
-
             TopologyTable topologyTable = r.getTopologyTable();
+            List<Map<Integer, String>> withdrawnRoutes = ((UpdateMessagePacket) bgpPacket).getWithdrawnRoutes(); //<length, IP_prefix>
+            List<Map<Integer, String>> networkLayerReachabilityInformation = ((UpdateMessagePacket) bgpPacket).getNetworkLayerReachabilityInformation(); //<length, IP_prefix>
+
+            //TODO: delete the withdrawn routes
+            for (Map<Integer, String> entry : withdrawnRoutes) {
+                for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
+                    String prefix = entry2.getValue();
+                    int length = entry2.getKey();
+                    topologyTable.removeEntryByIp(prefix);
+                    changed = true;
+                }
+            }
 
             //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
             //TODO: check if the origin of the bgpPacket is the same as the srcRouterName

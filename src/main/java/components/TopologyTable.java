@@ -41,6 +41,16 @@ public class TopologyTable{
 	public void removeEntry(PathAttributes pathAttributes){
 		listRIB.remove(pathAttributes);
 	}
+
+	//remove the entry based on the ip (which corresponds to the next hop)
+	public void removeEntryByIp(String ip){
+		for(int i = 0; i < listRIB.size(); i++){
+			if(listRIB.get(i).getNEXT_HOP().equals(ip)){
+				listRIB.remove(i);
+			}
+		}
+	}
+
 	public void printTable(){
 		for (PathAttributes pathAttributes : listRIB) {
 			System.out.println(pathAttributes.toString());
