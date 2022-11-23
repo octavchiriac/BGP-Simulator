@@ -1,9 +1,9 @@
 package multithread;
 
-import components.BGPStates;
-import components.Globals;
-import components.Router;
-import components.RouterInterface;
+import components.*;
+import components.tblentries.PathAttributes;
+import components.tblentries.PathSegments;
+import org.apache.commons.lang3.ArrayUtils;
 import packets.*;
 
 import static components.Router.getRouterByIP;
@@ -113,6 +113,10 @@ public class ReceiveTcpPacket implements Runnable {
                     String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
                     BgpPacket bgpPacket2 = new UpdateMessagePacket(stringedPkt);
 
+                    //TODO: decision process by trust and vote
+                    //insert the entry in the table
+                    updateTable(srcRouterName,destRouterName,bgpPacket2);
+
                     System.out.println(bgpPacket2.toString());
 
                     System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP state : Updated" + "\033[0m");
@@ -147,6 +151,30 @@ public class ReceiveTcpPacket implements Runnable {
                 }
             }
         }
+    }
+
+    //takes the update message and insert the value in the table, return a boolean if the entry if something has changed
+    public boolean updateTable(String srcRouterName,String destRouterName, BgpPacket bgpPacket){
+        //get the router by the name
+        boolean changed = false;
+        if (Globals.routerNames.contains(destRouterName)) {
+
+            Router r = Router.getRouterByName(destRouterName);
+
+            TopologyTable topologyTable = r.getTopologyTable();
+
+            //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
+            //TODO: check if the origin of the bgpPacket is the same as the srcRouterName
+            topologyTable.insertNewEntry(((UpdateMessagePacket)bgpPacket).getPathAttributes());
+
+            //if something changed, return true
+            //TODO: return what has changed
+            changed = r.updateBGPRoutingTable();
+
+        } else {
+            System.out.println("Router not found");
+        }
+        return changed;
     }
 
     @Override

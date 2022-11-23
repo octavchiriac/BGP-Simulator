@@ -117,8 +117,8 @@ public class Router implements Runnable {
         topologyTable.insertNewEntry(origin, asPath, nextHop);
     }
 
-    public void updateBGPRoutingTable(TopologyTable topologyTable){
-        routingTable.updateTable(topologyTable);
+    public boolean updateBGPRoutingTable(){
+        return routingTable.updateTable(topologyTable);
     }
 
     public void printRoutingTable() {

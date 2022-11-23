@@ -27,8 +27,9 @@ public class BGPRoutingTable {
         * This method is called when there is the need of updating the BGP Routing Table with the best paths from the RIB
         * The best path can be changed also based on the policies (like shortest path, lowest cost, etc)
      */
-    public void updateTable(TopologyTable topologyTable) {
+    public boolean updateTable(TopologyTable topologyTable) {
         ArrayList<PathAttributes> listRIB = topologyTable.getListRIB();
+        boolean changed= false;
 
         for (PathAttributes entry : listRIB) {
             String tmpNextHop = entry.getNEXT_HOP();
@@ -42,6 +43,7 @@ public class BGPRoutingTable {
                     // use the split with "," to get the number of AS from which the packets will pass, so we can take the shortest path
                     if (tmpPathSegmentValue[i].split(";").length < tmpBestPath.split(";").length) {
                         tmpBestPath = tmpPathSegmentValue[i];
+                        changed = true;
                     }
                 }
                 //if the destination ip is already inside, check if the bestpath is good
@@ -54,7 +56,7 @@ public class BGPRoutingTable {
             }
         }
 
-
+        return changed;
     }
 
     public HashMap<String, String> getBestRoutes() {
