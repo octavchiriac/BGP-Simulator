@@ -3,6 +3,7 @@ package multithread;
 import components.*;
 import packets.*;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -109,7 +110,7 @@ public class ReceiveTcpPacket implements Runnable {
 
                 // Receiving UPDATE packet
                 else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(6) == '1') {
-                    boolean isUpdated;
+                    List<Boolean> isUpdated;
                     // check dest router state, if =/= Established, drop packet
                     if (destInt != null && destInt.getState() != BGPStates.Established) {
                         throw new Exception("[" + srcRouterName + ":" + srcInt.getName() + " -> " + destRouterName + ":" + destInt.getName() + "] Destination router is not in Established state. Packet dropped!");
@@ -118,7 +119,7 @@ public class ReceiveTcpPacket implements Runnable {
                     System.out.println("[" + srcRouterName + " -> " + destRouterName + "] UPDATE packet sucessfully received on interface " + interfaceName);
 
                     String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
-                    BgpPacket bgpPacket2 = new UpdateMessagePacket(stringedPkt);
+                    UpdateMessagePacket bgpPacket2 = new UpdateMessagePacket(stringedPkt);
 
 
                     //TODO: decision process by trust and vote
@@ -128,22 +129,52 @@ public class ReceiveTcpPacket implements Runnable {
                     System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP tables : " + isUpdated + "\033[0m");
 
                     //Send UPDATE packet to all neighbors
-                    LinkedList<Object> listOfChanges = new LinkedList<Object>();
-                    listOfChanges.push(new Object());
-                    listOfChanges.push(new Object());
-                    if (isUpdated) {
+                    if (isUpdated.get(0) || isUpdated.get(1)) {
                         // get router's neighbors
                         dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
                             // avoids to send update to the router that sent the update in the first place
                             if (!sourceIpAddress.equals(key)) {
                                 // send an update to neighbor for each change
-                                for (Object o : listOfChanges) {
-                                    System.out.println("[" + dest.getName() + " -> " + key + "] Sending UPDATE packet to neighbor " + key);
-                                    // SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key, o.withdrawnRoutes, o.pathAttributes, o.networkLayerReachabilityInformation);
-                                    // ThreadPool.submit(task);
-                                }
+                                System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (Withdrawn routes + New routes) packet to neighbor " + key);
+                                SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
+                                        bgpPacket2.getWithdrawnRoutes(),
+                                        bgpPacket2.getPathAttributes(),
+                                        bgpPacket2.getNetworkLayerReachabilityInformation());
+                                ThreadPool.submit(task);
                             }
                         });
+                    } /*else if (isUpdated.get(0)) {
+                        // get router's neighbors
+                        dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
+                            // avoids to send update to the router that sent the update in the first place
+                            if (!sourceIpAddress.equals(key)) {
+                                // send an update to neighbor for each change
+                                System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (Withdrawn routes) packet to neighbor " + key);
+                                SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
+                                        bgpPacket2.getWithdrawnRoutes(),
+                                        null,
+                                        null);
+                                ThreadPool.submit(task);
+                            }
+                        });
+                    } else if (isUpdated.get(1)) {
+                        // get router's neighbors
+                        dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
+                            // avoids to send update to the router that sent the update in the first place
+                            if (!sourceIpAddress.equals(key)) {
+                                // send an update to neighbor for each change
+                                System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (New routes) packet to neighbor " + key);
+                                SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
+                                        null,
+                                        bgpPacket2.getPathAttributes(),
+                                        bgpPacket2.getNetworkLayerReachabilityInformation());
+                                ThreadPool.submit(task);
+                            }
+                        });
+                    }*/ else {
+                        // NO FORWARDING - Print routing table & topology table
+                        dest.printRoutingTable();
+                        dest.printTopologyTable();
                     }
 
                 }
@@ -179,9 +210,11 @@ public class ReceiveTcpPacket implements Runnable {
     }
 
     //takes the update message and insert the value in the table, return a boolean if the entry if something has changed
-    public boolean updateTable(String srcRouterName, String destRouterName, BgpPacket bgpPacket) {
+    // output boolean: [0] = true if routes has been removed, [1] = true if the route has been added
+    public List<Boolean> updateTable(String srcRouterName, String destRouterName, BgpPacket bgpPacket) throws Exception {
         //get the router by the name
-        boolean changed = false;
+        boolean addedRoutes = false;
+        boolean removedRoutes = false;
         if (Globals.routerNames.contains(destRouterName)) {
 
             Router r = Router.getRouterByName(destRouterName);
@@ -192,9 +225,14 @@ public class ReceiveTcpPacket implements Runnable {
             //TODO: delete the withdrawn routes
             for (Map<Integer, String> entry : withdrawnRoutes) {
                 for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
+
                     String prefix = entry2.getValue();
                     int length = entry2.getKey();
-                    topologyTable.removeEntryByIp(prefix);
+                    if (!removedRoutes) {
+                        removedRoutes = topologyTable.removeEntryByIp(prefix);
+                    } else {
+                        topologyTable.removeEntryByIp(prefix);
+                    }
                 }
             }
 
@@ -203,13 +241,15 @@ public class ReceiveTcpPacket implements Runnable {
             topologyTable.insertNewEntry(((UpdateMessagePacket) bgpPacket).getPathAttributes());
 
             //if something changed, return true
-            //TODO: return what has changed
-            changed = r.updateBGPRoutingTable();
+            addedRoutes = r.updateBGPRoutingTable();
 
         } else {
-            System.out.println("Router not found");
+            throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Router " + destRouterName + " not found!");
         }
-        return changed;
+        List<Boolean> output = new ArrayList<Boolean>();
+        output.add(removedRoutes);
+        output.add(addedRoutes);
+        return output;
     }
 
     @Override

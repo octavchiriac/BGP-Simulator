@@ -204,7 +204,7 @@ public class DoTest {
                 Map<Integer, String> NetworkLayerReachabilityInfo = null;
                 for (int i = 0; i < 3; i++) {
                     NetworkLayerReachabilityInfo = new HashMap<>();
-                    NetworkLayerReachabilityInfo.put(i, "122.168.0." + i);
+                    NetworkLayerReachabilityInfo.put(i, "100.1.2.1." + i);
                     NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
                 }
 
@@ -213,7 +213,7 @@ public class DoTest {
                 for (int i = 0; i < 3; i++) {
                     pathSegmentsVal[i] = "192.198.0." + i;
                 }
-                PathSegments ps = new PathSegments("192.168.178.2", pathSegmentsVal);
+                PathSegments ps = new PathSegments("10.0.0.2", pathSegmentsVal);
                 PathSegments[] psList = new PathSegments[1];
                 psList[0] = ps;
 
@@ -221,7 +221,7 @@ public class DoTest {
 
                 System.out.println("Sending update message to " + entry.getKey());
 
-                SendUpdateMessage task = new SendUpdateMessage("10.0.0.1", (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
+                SendUpdateMessage task = new SendUpdateMessage("10.1.0.2", (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
                 ThreadPool.submit(task);
                 leonardo.getAndIncrement();
             }

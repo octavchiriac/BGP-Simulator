@@ -246,6 +246,11 @@ public class Router implements Runnable {
     	System.out.println("[" + this.getName() + "] Neighbor table: \n" + this.getNeighborTable());
     }
 
+    public void printTopologyTable() {
+        System.out.println("[" + this.getName() + "] Topology table: \n");
+        this.topologyTable.printTable();
+    }
+
     /**
      *
      */

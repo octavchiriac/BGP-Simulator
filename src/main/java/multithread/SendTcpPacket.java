@@ -8,6 +8,8 @@ import packets.IpPacket;
 import packets.Packet;
 import packets.TcpPacket;
 
+import java.util.Objects;
+
 import static components.Router.getRouterByIP;
 
 public class SendTcpPacket implements Runnable{
@@ -96,7 +98,9 @@ public class SendTcpPacket implements Runnable{
 		} else if (isRst) {
 			packetType = "RST";
 		}
-        System.out.println("[" + src.getName() + " -> " + dest.getName() + "] Sending " + packetType + " packet");
+		if (!(isPsh && isAck && data.length() == 0)) {
+			System.out.println("[" + src.getName() + " -> " + dest.getName() + "] Sending " + packetType + " packet");
+		}
         if(bitStream == null) {
 	        bitStream = this.sendTcpPacket(sourcePort, destinationPort, seqNumber, ackNumber,
 					sourceIpAddress, destinationIpAddress, destinationMacAddress,
