@@ -211,7 +211,7 @@ public class DoTest {
                 // creating path attributes for AS_PATH field
                 String[] pathSegmentsVal = new String[3];
                 for (int i = 0; i < 3; i++) {
-                    pathSegmentsVal[i] = "192.198.0." + i;
+                    pathSegmentsVal[i] = "10.0.0." + i;
                 }
                 PathSegments ps = new PathSegments("10.1.0.2", pathSegmentsVal);
                 PathSegments[] psList = new PathSegments[1];

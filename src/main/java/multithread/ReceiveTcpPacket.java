@@ -239,7 +239,7 @@ public class ReceiveTcpPacket implements Runnable {
             //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
             //TODO: check if the origin of the bgpPacket is the same as the srcRouterName
             topologyTable.insertNewEntry(((UpdateMessagePacket) bgpPacket).getPathAttributes());
-
+            topologyTable.printTable();
             //if something changed, return true
             addedRoutes = r.updateBGPRoutingTable();
 

@@ -30,7 +30,8 @@ public class BGPRoutingTable {
     public boolean updateTable(TopologyTable topologyTable) {
         ArrayList<PathAttributes> listRIB = topologyTable.getListRIB();
         boolean changed= false;
-
+        System.out.println("Updating BGP Routing Table...");
+        topologyTable.printTable();
         System.out.println(this.toString());
 
         for (PathAttributes entry : listRIB) {
