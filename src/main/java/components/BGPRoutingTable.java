@@ -31,6 +31,8 @@ public class BGPRoutingTable {
         ArrayList<PathAttributes> listRIB = topologyTable.getListRIB();
         boolean changed= false;
 
+        System.out.println(this.toString());
+
         for (PathAttributes entry : listRIB) {
             String tmpNextHop = entry.getNEXT_HOP();
             PathSegments[] tmpPath= entry.getAS_PATH();
