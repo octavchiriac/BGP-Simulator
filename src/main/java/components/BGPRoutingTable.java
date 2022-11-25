@@ -54,7 +54,7 @@ public class BGPRoutingTable {
         return changed;
     }
 
-    public HashMap<String, String> getBestRoutes() {
+    public HashMap<String, String[]> getBestRoutes() {
         return bestRoutes;
     }
 
