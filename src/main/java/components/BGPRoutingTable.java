@@ -16,11 +16,11 @@ public class BGPRoutingTable {
  */
 
     // the new BGP routing table will have the pairs (DestinationIP, BestPath)
-    public HashMap<String, String> bestRoutes;
+    public HashMap<String, String[]> bestRoutes;
 
     public BGPRoutingTable() {
         super();
-        bestRoutes = new HashMap<String, String>();
+        bestRoutes = new HashMap<String, String[]>();
     }
 
     /*
@@ -39,20 +39,13 @@ public class BGPRoutingTable {
             PathSegments[] tmpPath= entry.getAS_PATH();
             for (PathSegments pathSegment : tmpPath) {
                 String tmpDestinationIp = pathSegment.getDestinationIp();
+                //list of IPs
                 String[] tmpPathSegmentValue = pathSegment.getPathSegmentValue();
-                String tmpBestPath = tmpPathSegmentValue[0];
-                //search the shortest path for each destinationIp
-                for (int i = 1; i < tmpPathSegmentValue.length; i++) {
-                    // use the split with "," to get the number of AS from which the packets will pass, so we can take the shortest path
-                    if (tmpPathSegmentValue[i].split(";").length < tmpBestPath.split(";").length) {
-                        tmpBestPath = tmpPathSegmentValue[i];
-                    }
-                }
                 //if the destination ip is already inside, check if the bestpath is good
                 if (bestRoutes.get(tmpDestinationIp) != null) {
-                    //if the best path is shorter than the one already in, update the best path
-                    if (tmpBestPath.split(";").length < bestRoutes.get(tmpDestinationIp).split(";").length) {
-                        bestRoutes.put(tmpDestinationIp, tmpBestPath);
+                    //if the best path is shorter (in terms of array size) than the one already in, update the best path
+                    if (bestRoutes.get(tmpDestinationIp).length > tmpPathSegmentValue.length) {
+                        bestRoutes.put(tmpDestinationIp, tmpPathSegmentValue);
                         changed = true;
                     }
                 }
@@ -62,7 +55,7 @@ public class BGPRoutingTable {
         return changed;
     }
 
-    public HashMap<String, String> getBestRoutes() {
+    public HashMap<String, String[]> getBestRoutes() {
         return bestRoutes;
     }
 

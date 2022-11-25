@@ -4,6 +4,8 @@ import components.tblentries.PathAttributes;
 import components.tblentries.PathSegments;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /*
  * BGP Table (also known as BGP topology table, BGP RIB) contains the network layer reachability information (NLRI)
@@ -15,11 +17,21 @@ public class TopologyTable{
 
 	//public ArrayList<TopologyTableEntry> listRIB; //stores all the possible paths
 	public  ArrayList<PathAttributes> listRIB; //stores all the possible paths
+	List<Map<Integer, String>> NLRI; //stores the NLRI, the prefix and the length
 
 	public TopologyTable(){
 		super();
 		//listRIB = new ArrayList<TopologyTableEntry>();
 		listRIB = new ArrayList<PathAttributes>();
+		NLRI = new ArrayList<Map<Integer, String>>();
+	}
+
+	public void inserEntrytNLRI(Map<Integer, String> entry){
+		NLRI.add(entry);
+	}
+
+	public List<Map<Integer, String>> getNLRI(){
+		return NLRI;
 	}
 
 	public void insertNewEntry(PathAttributes pathAttributes){
