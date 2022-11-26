@@ -55,6 +55,11 @@ public class BGPRoutingTable {
         return changed;
     }
 
+    public boolean chooseBestEntry(){
+        //TODO ADD THE DECIDING ALGORITHM BASED ON THE POLICIES WE CHOOSE
+        return false;
+    }
+
     public HashMap<String, String[]> getBestRoutes() {
         return bestRoutes;
     }
