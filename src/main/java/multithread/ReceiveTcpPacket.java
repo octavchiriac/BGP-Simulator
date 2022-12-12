@@ -122,9 +122,8 @@ public class ReceiveTcpPacket implements Runnable {
                     String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
                     UpdateMessagePacket bgpPacket2 = new UpdateMessagePacket(stringedPkt);
 
-
-                    //TODO: decision process by trust and vote
                     //insert the entry in the table
+                    // output [removedRoutes, addedRoutes]
                     isUpdated = updateTable(srcRouterName, destRouterName, bgpPacket2);
 
                     System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP tables : " + isUpdated + "\033[0m");
@@ -247,10 +246,14 @@ public class ReceiveTcpPacket implements Runnable {
                 //topologyTable.insertEntryNLRI(entry);
                 //topologyTable.insertNewEntry(pathAttributes);
             }
-
             topologyTable.printTable();
+
+            //update the BGP routing table
             //if something changed, return true
             addedRoutes = r.updateBGPRoutingTable();
+            System.out.println("[" + destRouterName + "] Routing table updated!");
+            System.out.println("[" + destRouterName + "] Routing table: ");
+            r.printRoutingTable();
 
         } else {
             throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Router " + destRouterName + " not found!");

@@ -8,11 +8,16 @@ import java.util.Arrays;
 
 public class PathSegments {
     private String destinationIp;
-    private String[] pathSegmentValue; // List of all possible paths in IP ADDRESS for destinationIp
+    private String[] pathSegmentValue; // List of all possible AS the update packet has passed through
 
     public PathSegments(String destinationIp, String[] pathSegmentValue) {
         this.destinationIp = destinationIp;
         this.pathSegmentValue = pathSegmentValue;
+    }
+
+    @Override
+    public String toString() {
+        return "pathSegmentValue=" + Arrays.toString(pathSegmentValue);
     }
 
     public PathSegments(String bitsArray) {

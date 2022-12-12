@@ -17,11 +17,12 @@ public class BGPRoutingTable {
  */
 
     // the new BGP routing table will have the pairs (DestinationIP, BestPath)
-    public HashMap<String, String[]> bestRoutes;
+    // public HashMap<String, String[]> bestRoutes;
+    public Map<String,PathAttributes> bestRoutes ; //routing table composed by (DEST_IP,(NEXT_HOP,ORIGIN,AS_PATH))
 
     public BGPRoutingTable() {
         super();
-        bestRoutes = new HashMap<String, String[]>();
+        bestRoutes = new HashMap<String,PathAttributes>();
     }
 
     /*
@@ -57,44 +58,50 @@ public class BGPRoutingTable {
         Map<String,PathAttributes> topTable = topologyTable.getTopTable();
         boolean changed= false;
         System.out.println("Updating BGP Routing Table...");
-        topologyTable.printTable();
-        System.out.println(this.toString());
+        //topologyTable.printTable();
+        //System.out.println(this.toString());
 
         for (Map.Entry<String, PathAttributes> entry : topTable.entrySet()) {
-            String tmpNextHop = entry.getValue().getNEXT_HOP();
+            String destIP = entry.getKey();
             PathSegments[] tmpPath= entry.getValue().getAS_PATH();
-            for (PathSegments pathSegment : tmpPath) {
-                String tmpDestinationIp = pathSegment.getDestinationIp();
-                //list of IPs
-                String[] tmpPathSegmentValue = pathSegment.getPathSegmentValue();
-                //if the destination ip is already inside, check if the bestpath is good
-                if (bestRoutes.get(tmpDestinationIp) != null) {
-                    //if the best path is shorter (in terms of array size) than the one already in, update the best path
-                    if (bestRoutes.get(tmpDestinationIp).length > tmpPathSegmentValue.length) {
-                        bestRoutes.put(tmpDestinationIp, tmpPathSegmentValue);
-                        changed = true;
-                    }
+
+            if(bestRoutes.get(destIP) != null){
+                // Compares existing table entry with the new one, deciding the best based on some criteria
+                PathAttributes res = chooseBestEntry(bestRoutes.get(destIP), entry.getValue(), changed);
+                if (res != null) {
+                    bestRoutes.put(destIP, res);
                 }
+            } else {
+                // Adds the new entry in the table since there is no entry for that destination IP
+                bestRoutes.put(destIP, entry.getValue());
+                changed = true;
             }
+
         }
 
         return changed;
     }
 
-    public boolean chooseBestEntry(){
-        //TODO ADD THE DECIDING ALGORITHM BASED ON THE POLICIES WE CHOOSE
-        return false;
+    public PathAttributes chooseBestEntry(PathAttributes oldEntry, PathAttributes newEntry, boolean changed){
+        PathAttributes res = newEntry;
+        //TODO: ADD THE DECIDING ALGORITHM BASED ON THE POLICIES WE CHOOSE
+        // for now we just implement the shortest AS path
+        if(oldEntry.getAS_PATH().length <= newEntry.getAS_PATH().length){
+            res = oldEntry;
+            changed = true;
+        }
+        return res;
     }
 
-    public HashMap<String, String[]> getBestRoutes() {
-        return bestRoutes;
+    public HashMap<String,PathAttributes> getBestRoutes() {
+        return (HashMap<String, PathAttributes>) bestRoutes;
     }
 
     @Override
     public String toString() {
         String result = "";
         for (String key : bestRoutes.keySet()) {
-            result += "|Destination IP: " + key + " | Best Path: " + bestRoutes.get(key) + ";";
+            result += "|Destination IP: " + key + " | Best Path: " + bestRoutes.get(key) + "; \n";
         }
         return result;
     }

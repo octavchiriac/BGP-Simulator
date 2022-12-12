@@ -35,9 +35,13 @@ public class PathAttributes {
 
     @Override
     public String toString() {
+        StringBuilder stringedAsPath = new StringBuilder();
+        for (PathSegments ps : AS_PATH) {
+            stringedAsPath.append(ps.toString()).append(", ");
+        }
         return "PathAttributes{" +
                 "ORIGIN='" + ORIGIN + '\'' +
-                ", AS_PATH=" + Arrays.toString(AS_PATH) +
+                ", AS_PATH=[" + stringedAsPath.toString() + "]" +
                 ", NEXT_HOP='" + NEXT_HOP + '\'' +
                 ", MULTI_EXIT_DISC='" + MULTI_EXIT_DISC + '\'' +
                 ", LOCAL_PREF='" + LOCAL_PREF + '\'' +

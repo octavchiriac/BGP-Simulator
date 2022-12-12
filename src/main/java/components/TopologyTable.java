@@ -94,7 +94,7 @@ public class TopologyTable{
 			System.out.println(pathAttributes.toString());
 		}*/
 		for (Map.Entry<String, PathAttributes> entry : topTable.entrySet()) {
-			System.out.println("DEST_IP: " + entry.getKey() + " " + entry.getValue().toString());
+			System.out.println("DEST_IP: " + entry.getKey() + " : " + entry.getValue().toString());
 		}
 	}
 
