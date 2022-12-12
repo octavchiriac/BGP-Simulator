@@ -65,7 +65,7 @@ public class SendUpdateMessage implements Runnable {
 
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            System.err.println(e.getMessage());
+            System.err.println("Error in Sending update: " + e.getMessage());
         }
     }
 }

@@ -18,7 +18,7 @@ public class PathAttributes {
     private String AGGREGATOR = "";
 
     public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP) {
-        this.ORIGIN = ORIGIN;
+        this.ORIGIN = ORIGIN; // IGP, EGP, INCOMPLETE -- 0, 1, 2 --> should be always 1
         this.AS_PATH = AS_PATH;
         this.NEXT_HOP = NEXT_HOP;
     }
@@ -71,6 +71,13 @@ public class PathAttributes {
         }
     }
 
+    public void addAsPathSegment(PathSegments pathSegments) {
+        PathSegments[] newPathSegments = new PathSegments[AS_PATH.length + 1];
+        System.arraycopy(AS_PATH, 0, newPathSegments, 0, AS_PATH.length);
+        newPathSegments[AS_PATH.length] = pathSegments;
+        AS_PATH = newPathSegments;
+    }
+
     public String getORIGIN() {
         return ORIGIN;
     }
@@ -81,6 +88,10 @@ public class PathAttributes {
 
     public String getNEXT_HOP() {
         return NEXT_HOP;
+    }
+
+    public void setNEXT_HOP(String NEXT_HOP) {
+        this.NEXT_HOP = NEXT_HOP;
     }
 
     public String getMULTI_EXIT_DISC() {

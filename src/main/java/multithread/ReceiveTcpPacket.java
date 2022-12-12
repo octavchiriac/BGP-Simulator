@@ -2,6 +2,7 @@ package multithread;
 
 import components.*;
 import components.tblentries.PathAttributes;
+import components.tblentries.PathSegments;
 import packets.*;
 
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class ReceiveTcpPacket implements Runnable {
 
                 //TODO search in table for destination
 
-                //TODO what to do here if you don't find the router in the table? do you broadcast? --> DROP THE PACKET
+                //TODO what to do here if you don't find the router in the table? do you broadcast? --> DROP THE PACKET (has this been implemented yet? @octavchiriac)
                 ipPacket2.decreaseTimeToLive();
 
                 Packet hdlcPacket = new HdlcPacket("01111110", Globals.DESTINATION_MAC_ADDRESS, "00000000", ipPacket2.packetToBitArray(), "00000000");
@@ -67,14 +68,14 @@ public class ReceiveTcpPacket implements Runnable {
                 ThreadPool.submit(task);
 
             } else {
-                /** TODO Here you need to add another if for the UPDATE packets, and somehow differentiate it from the OPEN one,
+                /** Here you need to add another if for the UPDATE packets, and somehow differentiate it from the OPEN one,
                  * Problem is that both OPEN and KEEPALIVE and UPDATE packets have the same bits on true (ACK + PSH)
                  * So maybe try to differentiate from the first bit of the data encapsulated as BGP packet(?)
                  * For example, every OPEN packet starts with the BGP version which is 4, so every packet starts like
                  * 0000010.... -> every 6th bit is 1....you can see how update packets will look like in binary
                  * and maybe try doing this to differentiate
                  *
-                 * I set the 6th bit as 1 to differentiate the UPDATE packets from the other ones
+                 * Done --> I set the 6th bit as 1 to differentiate the UPDATE packets from the other ones
                  * */
 
                 // Receiving KEEPALIVE packet
@@ -126,7 +127,7 @@ public class ReceiveTcpPacket implements Runnable {
                     // output [removedRoutes, addedRoutes]
                     isUpdated = updateTable(srcRouterName, destRouterName, bgpPacket2);
 
-                    System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP tables : " + isUpdated + "\033[0m");
+                    System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP tables [hasDeletedRoutes, BGPTableUpdated] : " + isUpdated + "\033[0m");
 
                     //Send UPDATE packet to all neighbors
                     if (isUpdated.get(0) || isUpdated.get(1)) {
@@ -135,7 +136,18 @@ public class ReceiveTcpPacket implements Runnable {
                             // avoids to send update to the router that sent the update in the first place
                             if (!sourceIpAddress.equals(key)) {
                                 // send an update to neighbor for each change
-                                System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (Withdrawn routes + New routes) packet to neighbor " + key);
+                                System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (Withdrawn routes + New routes) packet to neighbor " + key + " @ " + getRouterByIP(key).getName());
+
+                                // adding pathsegment to tell that the update went through this router
+                                String[] segmentVal = new String[1];
+                                segmentVal[0] = destinationIpAddress;
+                                PathSegments pathSegments = new PathSegments(destinationIpAddress, segmentVal);
+                                bgpPacket2.getPathAttributes().addAsPathSegment(pathSegments);
+
+                                // adding next hop to tell
+                                bgpPacket2.getPathAttributes().setNEXT_HOP(sourceIpAddress);
+
+                                // send update packet
                                 SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
                                         bgpPacket2.getWithdrawnRoutes(),
                                         bgpPacket2.getPathAttributes(),
@@ -143,35 +155,7 @@ public class ReceiveTcpPacket implements Runnable {
                                 ThreadPool.submit(task);
                             }
                         });
-                    } /*else if (isUpdated.get(0)) {
-                        // get router's neighbors
-                        dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
-                            // avoids to send update to the router that sent the update in the first place
-                            if (!sourceIpAddress.equals(key)) {
-                                // send an update to neighbor for each change
-                                System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (Withdrawn routes) packet to neighbor " + key);
-                                SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
-                                        bgpPacket2.getWithdrawnRoutes(),
-                                        null,
-                                        null);
-                                ThreadPool.submit(task);
-                            }
-                        });
-                    } else if (isUpdated.get(1)) {
-                        // get router's neighbors
-                        dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
-                            // avoids to send update to the router that sent the update in the first place
-                            if (!sourceIpAddress.equals(key)) {
-                                // send an update to neighbor for each change
-                                System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (New routes) packet to neighbor " + key);
-                                SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
-                                        null,
-                                        bgpPacket2.getPathAttributes(),
-                                        bgpPacket2.getNetworkLayerReachabilityInformation());
-                                ThreadPool.submit(task);
-                            }
-                        });
-                    }*/ else {
+                    } else {
                         // NO FORWARDING - Print routing table & topology table
                         dest.printRoutingTable();
                         dest.printTopologyTable();
@@ -270,7 +254,7 @@ public class ReceiveTcpPacket implements Runnable {
         try {
             this.receiveTcpPacket(bitArrayHdlc);
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.err.println("(Error in receiving tcp packet) - " + e.getMessage());
         }
     }
 

@@ -192,6 +192,8 @@ public class DoTest {
                 List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
                 List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
                 PathAttributes pathAttributes;
+                String sourceIP = "10.0.1.1";
+                System.out.println("--------------------------------------------------------------Sending update message from " + sourceIP);
 
                 // filling lists with random data
                 Map<Integer, String> WithdrawnRoute = null;
@@ -209,19 +211,15 @@ public class DoTest {
                 }
 
                 // creating path attributes for AS_PATH field
-                String[] pathSegmentsVal = new String[3];
-                for (int i = 0; i < 3; i++) {
-                    pathSegmentsVal[i] = "10.0.0." + i;
-                }
-                PathSegments ps = new PathSegments("10.1.0.2", pathSegmentsVal);
+                String[] pathSegmentsVal = new String[1];
+                pathSegmentsVal[0] = sourceIP;
+                PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal); // destinationIp parameter is wrong and not used, but it is required
                 PathSegments[] psList = new PathSegments[1];
                 psList[0] = ps;
 
-                pathAttributes = new PathAttributes("0", psList, "10.0.0.2");
+                pathAttributes = new PathAttributes("1", psList, sourceIP);
 
-                System.out.println("Sending update message to " + entry.getKey());
-
-                SendUpdateMessage task = new SendUpdateMessage("10.0.0.1", (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
+                SendUpdateMessage task = new SendUpdateMessage(sourceIP, (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
                 ThreadPool.submit(task);
                 leonardo.getAndIncrement();
             }

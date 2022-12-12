@@ -277,7 +277,7 @@ public class Router implements Runnable {
                     ThreadPool.submit(task);
                 }
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                System.err.println("Error in handling TCP packet at "+ this.getName() + ": " + e.getMessage());
             }
         }
     }
