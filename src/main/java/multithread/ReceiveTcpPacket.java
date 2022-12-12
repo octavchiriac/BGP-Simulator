@@ -222,7 +222,7 @@ public class ReceiveTcpPacket implements Runnable {
             List<Map<Integer, String>> withdrawnRoutes = ((UpdateMessagePacket) bgpPacket).getWithdrawnRoutes(); //<length, IP_prefix>
             List<Map<Integer, String>> networkLayerReachabilityInformation = ((UpdateMessagePacket) bgpPacket).getNetworkLayerReachabilityInformation(); //<length, IP_prefix>
 
-            //TODO: delete the withdrawn routes
+            // Delete the withdrawn routes
             for (Map<Integer, String> entry : withdrawnRoutes) {
                 for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
 
@@ -237,7 +237,7 @@ public class ReceiveTcpPacket implements Runnable {
             }
 
             //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
-            //TODO: check if the origin of the bgpPacket is the same as the srcRouterName
+            //check if the origin of the bgpPacket is the same as the srcRouterName
             topologyTable.insertNewEntry(((UpdateMessagePacket) bgpPacket).getPathAttributes());
             topologyTable.printTable();
             //if something changed, return true
