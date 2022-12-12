@@ -1,6 +1,7 @@
 package multithread;
 
 import components.*;
+import components.tblentries.PathAttributes;
 import packets.*;
 
 import java.util.ArrayList;
@@ -221,6 +222,7 @@ public class ReceiveTcpPacket implements Runnable {
             TopologyTable topologyTable = r.getTopologyTable();
             List<Map<Integer, String>> withdrawnRoutes = ((UpdateMessagePacket) bgpPacket).getWithdrawnRoutes(); //<length, IP_prefix>
             List<Map<Integer, String>> networkLayerReachabilityInformation = ((UpdateMessagePacket) bgpPacket).getNetworkLayerReachabilityInformation(); //<length, IP_prefix>
+            PathAttributes pathAttributes = ((UpdateMessagePacket) bgpPacket).getPathAttributes();
 
             // Delete the withdrawn routes
             for (Map<Integer, String> entry : withdrawnRoutes) {
@@ -237,8 +239,15 @@ public class ReceiveTcpPacket implements Runnable {
             }
 
             //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
-            //check if the origin of the bgpPacket is the same as the srcRouterName
-            topologyTable.insertNewEntry(((UpdateMessagePacket) bgpPacket).getPathAttributes());
+            //put Pathatribture and NLRI together
+            for (Map<Integer, String> entry : networkLayerReachabilityInformation) {
+                for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
+                    topologyTable.insertEntry(entry2.getValue(),pathAttributes);
+                }
+                //topologyTable.insertEntryNLRI(entry);
+                //topologyTable.insertNewEntry(pathAttributes);
+            }
+
             topologyTable.printTable();
             //if something changed, return true
             addedRoutes = r.updateBGPRoutingTable();
