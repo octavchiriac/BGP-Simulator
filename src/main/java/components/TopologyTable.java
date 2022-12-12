@@ -70,9 +70,18 @@ public class TopologyTable{
 	//remove the entry based on the ip (which corresponds to the next hop)
 	public boolean removeEntryByIp(String ip){
 		boolean removed = false;
+		/*
 		for(int i = 0; i < listRIB.size(); i++){
 			if(listRIB.get(i).getNEXT_HOP().equals(ip)){
 				listRIB.remove(i);
+				removed = true;
+			}
+		}*/
+
+		//Remove the entry from the topology table if the destination IP or the NEXTHOP corresponds to the withdrawn IP
+		for(int i=0;i<topTable.size();i++){
+			if(topTable.get(i).equals(ip) || topTable.get(i).getNEXT_HOP().equals(ip)){
+				topTable.remove(i);
 				removed = true;
 			}
 		}
