@@ -1,12 +1,16 @@
 package components;
 
+import components.tblentries.PathAttributes;
 import components.tblentries.PathSegments;
+import de.vandermeer.asciitable.AsciiTable;
 import multithread.ReceiveTcpPacket;
 import multithread.SendTcpPacket;
 import multithread.ThreadPool;
 import utils.TypeHandlers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -21,8 +25,8 @@ public class Router implements Runnable {
     private boolean isEnabled;
     private boolean isRestarted;
     private TopologyTable topologyTable;
-    public  BGPRoutingTable routingTable;
-    private BlockingQueue<String> queue ;
+    public BGPRoutingTable routingTable;
+    private BlockingQueue<String> queue;
     private NeighborTable neighborTable;
 
     private ArrayList<Router> tcpConnectedRouters;
@@ -77,10 +81,10 @@ public class Router implements Runnable {
             // Change BGP states to Active after router is disabled
             for (RouterInterface inter : this.getInterfaces()) {
                 inter.setState(BGPStates.Active);
-                System.out.println("\033[0;35m" + "[" + name  + " - " + inter.getName() + "] BGP state : Active" + "\033[0m");
+                System.out.println("\033[0;35m" + "[" + name + " - " + inter.getName() + "] BGP state : Active" + "\033[0m");
             }
         }
-        System.out.println("[" + name  + "] Router state : " + (isEnabled? "Enabled" : "Disabled"));
+        System.out.println("[" + name + "] Router state : " + (isEnabled ? "Enabled" : "Disabled"));
     }
 
     private void restartRouter() {
@@ -88,7 +92,7 @@ public class Router implements Runnable {
         // Change BGP states to Idle after router is restarted
         for (RouterInterface inter : this.getInterfaces()) {
             inter.setState(BGPStates.Idle);
-            System.out.println("\033[0;35m" + "[" + name  + " - " + inter.getName() + "] BGP state : Idle" + "\033[0m");
+            System.out.println("\033[0;35m" + "[" + name + " - " + inter.getName() + "] BGP state : Idle" + "\033[0m");
         }
 
         this.isRestarted = true;
@@ -102,27 +106,58 @@ public class Router implements Runnable {
     }
 
 
-
     //function to insert values inside the routing table based on the neighbor table
     public void insertFromNeighbour(String destinationIP, String destinationAS) {
         neighborTable.addNeighbor(destinationIP, destinationAS);
     }
 
     public NeighborTable getNeighborTable() {
-		return neighborTable;
-	}
+        return neighborTable;
+    }
 
 
-    public void setTopologyTableEntry(String origin, PathSegments[] asPath, String nextHop){
+    public void setTopologyTableEntry(String origin, PathSegments[] asPath, String nextHop) {
         topologyTable.insertNewEntry(origin, asPath, nextHop);
     }
 
-    public boolean updateBGPRoutingTable(){
+    public boolean updateBGPRoutingTable() {
         return routingTable.updateTable(topologyTable);
     }
 
     public void printRoutingTable() {
-        System.out.println(routingTable.toString());
+        synchronized (Globals.lock) {
+            System.out.println("[" + name + "] BGP Routing table: ");
+            AsciiTable at = new AsciiTable();
+            at.addRule();
+            at.addRule();
+            at.addRow("ID", "Destination IP", "AS_PATH", "NEXT_HOP", "MULTI_EXIT_DISC", "LOCAL_PREF");
+            at.addRule();
+            at.addRule();
+            int i = 1;
+            for (Map.Entry<String, PathAttributes> entry : routingTable.getBestRoutes().entrySet()) {
+                at.addRow(i, entry.getKey(), Arrays.toString(entry.getValue().getAS_PATH()), entry.getValue().getNEXT_HOP(), entry.getValue().getMULTI_EXIT_DISC(), entry.getValue().getLOCAL_PREF());
+                at.addRule();
+                i++;
+            }
+            System.out.println(at.render());
+        }
+    }
+
+    public void printTopologyTable() {
+        synchronized (Globals.lock) {
+            System.out.println("[" + name + "] LNRI Topology table: ");
+            AsciiTable at = new AsciiTable();
+            at.addRule();
+            at.addRule();
+            at.addRow("Destination IP", "Path Attributes");
+            at.addRule();
+            at.addRule();
+            for (Map.Entry<String, PathAttributes> entry : topologyTable.getTopTable().entrySet()) {
+                at.addRow(entry.getKey(), entry.getValue().toString());
+                at.addRule();
+            }
+            System.out.println(at.render());
+        }
     }
 
     public TopologyTable getTopologyTable() {
@@ -134,8 +169,8 @@ public class Router implements Runnable {
     }
 
     public void printTcpConnectedRouters() {
-        System.out.print("[" + name  + "] TCP Connected routers : { ");
-        for(Router r : tcpConnectedRouters) {
+        System.out.print("[" + name + "] TCP Connected routers : { ");
+        for (Router r : tcpConnectedRouters) {
             System.out.print(r.getName() + " ");
         }
         System.out.println("}");
@@ -168,7 +203,8 @@ public class Router implements Runnable {
     }
 
     public static Router getRouterByName(String name) {
-        for (Router r : routers) {{
+        for (Router r : routers) {
+            {
                 if (r.getName().equals(name)) {
                     return r;
                 }
@@ -186,7 +222,7 @@ public class Router implements Runnable {
         }
         return enabledInterfaces;
     }
-    
+
     public ArrayList<String> getEnabledInterfacesAddresses() {
         ArrayList<String> enabledInterfaces = new ArrayList<String>();
         for (RouterInterface i : interfaces) {
@@ -198,7 +234,7 @@ public class Router implements Runnable {
     }
 
     public void queuePacket(String bs) {
-        if(this.isEnabled) {
+        if (this.isEnabled) {
             System.out.println("\033[0;32m" + "[INFO] Packet queued at " + name + " at " +
                     TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()) + "\033[0m");
             queue.add(bs);
@@ -207,25 +243,25 @@ public class Router implements Runnable {
                     TypeHandlers.getCurrentTimeFromMillis(System.currentTimeMillis()));
         }
     }
-   
-    public void populateNeighborTable () {
-		for(RouterInterface i : this.getInterfaces()) {
+
+    public void populateNeighborTable() {
+        for (RouterInterface i : this.getInterfaces()) {
 
             // Change BGP state to Connect
             i.setState(BGPStates.Connect);
-            System.out.println("\033[0;35m" + "[" + name  + " - " + i.getName() + "] BGP state : Connect" + "\033[0m");
+            System.out.println("\033[0;35m" + "[" + name + " - " + i.getName() + "] BGP state : Connect" + "\033[0m");
 
-			if(i.getDirectLink() != null) {
-				RouterInterface neighborRouter = getRouterInterfaceByIP(i.getDirectLink());
-				
-				neighborTable.addNeighbor(neighborRouter.getIpAddress(), neighborRouter.getAs());
-				
-				System.out.println("[" + name  + "] Discovered neighbor " + neighborRouter.getIpAddress() + 
-						" from AS " + neighborRouter.getAs());
-			}
-		}
-		
-		Globals.nrRoutersStarted++;
+            if (i.getDirectLink() != null) {
+                RouterInterface neighborRouter = getRouterInterfaceByIP(i.getDirectLink());
+
+                neighborTable.addNeighbor(neighborRouter.getIpAddress(), neighborRouter.getAs());
+
+                System.out.println("[" + name + "] Discovered neighbor " + neighborRouter.getIpAddress() +
+                        " from AS " + neighborRouter.getAs());
+            }
+        }
+
+        Globals.nrRoutersStarted++;
     }
 
     public void printRouterInfo() {
@@ -241,28 +277,28 @@ public class Router implements Runnable {
         }
         System.out.println("########################");
     }
-    
+
     public void printNeighborTable() {
-    	System.out.println("[" + this.getName() + "] Neighbor table: \n" + this.getNeighborTable());
+        System.out.println("[" + this.getName() + "] Neighbor table: \n" + this.getNeighborTable());
     }
 
-    public void printTopologyTable() {
-        System.out.println("[" + this.getName() + "] Topology table: \n");
-        this.topologyTable.printTable();
+    public void setTopologyTable(TopologyTable topologyTable) {
+        this.topologyTable = topologyTable;
     }
+
 
     /**
      *
      */
     @Override
     public void run() {
-        System.out.println("[" + name  + "] Router starting");
-        
+        System.out.println("[" + name + "] Router starting");
+
         // Enabling router
         this.isEnabled = true;
-        
-        System.out.println("[" + name  + "] Router state : Enabled");
-        
+
+        System.out.println("[" + name + "] Router state : Enabled");
+
         // Adding direct links to the neighbor table
         populateNeighborTable();
 
@@ -277,7 +313,7 @@ public class Router implements Runnable {
                     ThreadPool.submit(task);
                 }
             } catch (Exception e) {
-                System.err.println("Error in handling TCP packet at "+ this.getName() + ": " + e.getMessage());
+                System.err.println("Error in handling TCP packet at " + this.getName() + ": " + e.getMessage());
             }
         }
     }

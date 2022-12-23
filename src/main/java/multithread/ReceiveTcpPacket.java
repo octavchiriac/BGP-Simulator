@@ -82,7 +82,7 @@ public class ReceiveTcpPacket implements Runnable {
                 if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().length() == 0) {
                     System.out.println("[" + srcRouterName + " -> " + destRouterName + "] KEEPALIVE packet sucessfully received on interface " + interfaceName);
 
-                    if (tcpPacket2.getSequenceNumber() == 0) {
+                    if (tcpPacket2.getSequenceNumber() == 0 || tcpPacket2.getSequenceNumber() == 1) {
                         destInt.setState(BGPStates.Established);
                         System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP state : Established" + "\033[0m");
                     }
@@ -115,50 +115,65 @@ public class ReceiveTcpPacket implements Runnable {
                     List<Boolean> isUpdated;
                     // check dest router state, if =/= Established, drop packet
                     if (destInt != null && destInt.getState() != BGPStates.Established) {
-                        throw new Exception("[" + srcRouterName + ":" + srcInt.getName() + " -> " + destRouterName + ":" + destInt.getName() + "] Destination router is not in Established state. Packet dropped!");
+                        throw new Exception("[" + srcRouterName + ":" + srcInt.getName() + " -> " + destRouterName + ":" + destInt.getName()
+                                + "] Destination router is not in Established state. Packet dropped!"
+                                + " Destination router state: " + destInt.getState());
                     }
 
                     System.out.println("[" + srcRouterName + " -> " + destRouterName + "] UPDATE packet sucessfully received on interface " + interfaceName);
 
-                    String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
-                    UpdateMessagePacket bgpPacket2 = new UpdateMessagePacket(stringedPkt);
+                    UpdateMessagePacket bgpPacket2 = null;
+                    try {
+                        String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
+                        bgpPacket2 = new UpdateMessagePacket(stringedPkt);
+                    } catch (Exception e) {
+                        throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in parsing the UPDATE packet - " + e.getMessage());
+                    }
 
-                    //insert the entry in the table
-                    // output [removedRoutes, addedRoutes]
-                    isUpdated = updateTable(srcRouterName, destRouterName, bgpPacket2);
+                    try {
+                        //insert the entry in the table
+                        // output [removedRoutes, addedRoutes]
+                        isUpdated = updateTable(srcRouterName, destRouterName, bgpPacket2);
 
-                    System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP tables [hasDeletedRoutes, BGPTableUpdated] : " + isUpdated + "\033[0m");
+                        System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP tables [hasDeletedRoutes, BGPTableUpdated] : " + isUpdated + "\033[0m");
 
-                    //Send UPDATE packet to all neighbors
-                    if (isUpdated.get(0) || isUpdated.get(1)) {
-                        // get router's neighbors
-                        dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
-                            // avoids to send update to the router that sent the update in the first place
-                            if (!sourceIpAddress.equals(key)) {
-                                // send an update to neighbor for each change
-                                System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (Withdrawn routes + New routes) packet to neighbor " + key + " @ " + getRouterByIP(key).getName());
+                        //Send UPDATE packet to all neighbors
+                        if (isUpdated.get(0) || isUpdated.get(1)) {
+                            // get router's neighbors
+                            UpdateMessagePacket finalBgpPacket = bgpPacket2;
+                            dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
+                                // avoids to send update to the router that sent the update in the first place
+                                if (!sourceIpAddress.equals(key)) {
+                                    // send an update to neighbor for each change
+                                    System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (Withdrawn routes + New routes) packet to neighbor " + key + " @ " + getRouterByIP(key).getName());
 
-                                // adding pathsegment to tell that the update went through this router
-                                String[] segmentVal = new String[1];
-                                segmentVal[0] = destinationIpAddress;
-                                PathSegments pathSegments = new PathSegments(destinationIpAddress, segmentVal);
-                                bgpPacket2.getPathAttributes().addAsPathSegment(pathSegments);
+                                    // adding pathsegment to tell that the update went through this router
+                                    String[] segmentVal = new String[1];
+                                    segmentVal[0] = destinationIpAddress;
+                                    PathSegments pathSegments = new PathSegments(destinationIpAddress, segmentVal);
+                                    finalBgpPacket.getPathAttributes().addAsPathSegment(pathSegments);
 
-                                // adding next hop to tell
-                                bgpPacket2.getPathAttributes().setNEXT_HOP(sourceIpAddress);
+                                    // adding next hop to tell
+                                    finalBgpPacket.getPathAttributes().setNEXT_HOP(sourceIpAddress);
 
-                                // send update packet
-                                SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
-                                        bgpPacket2.getWithdrawnRoutes(),
-                                        bgpPacket2.getPathAttributes(),
-                                        bgpPacket2.getNetworkLayerReachabilityInformation());
-                                ThreadPool.submit(task);
-                            }
-                        });
-                    } else {
-                        // NO FORWARDING - Print routing table & topology table
-                        dest.printRoutingTable();
-                        dest.printTopologyTable();
+                                    // send update packet
+                                    SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
+                                            finalBgpPacket.getWithdrawnRoutes(),
+                                            finalBgpPacket.getPathAttributes(),
+                                            finalBgpPacket.getNetworkLayerReachabilityInformation());
+                                    ThreadPool.submit(task);
+                                }
+                            });
+                        } else {
+                            // NO FORWARDING - Print routing table & topology table
+                            /*
+                            dest.printRoutingTable();
+                            dest.printTopologyTable();
+                            */
+                            System.out.println("[" + dest.getName() + " - " + destInt.getName() + "] Update Packet has not been forwarded to neighbors");
+                        }
+                    } catch (Exception e) {
+                        throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in handling tables - " + e.getMessage());
                     }
 
                 }
@@ -196,56 +211,70 @@ public class ReceiveTcpPacket implements Runnable {
     //takes the update message and insert the value in the table, return a boolean if the entry if something has changed
     // output boolean: [0] = true if routes has been removed, [1] = true if the route has been added
     public List<Boolean> updateTable(String srcRouterName, String destRouterName, BgpPacket bgpPacket) throws Exception {
-        //get the router by the name
-        boolean addedRoutes = false;
-        boolean removedRoutes = false;
-        if (Globals.routerNames.contains(destRouterName)) {
+        try {
+            //get the router by the name
+            boolean addedRoutes = false;
+            boolean removedRoutes = false;
+            if (Globals.routerNames.contains(destRouterName)) {
 
-            Router r = Router.getRouterByName(destRouterName);
-            TopologyTable topologyTable = r.getTopologyTable();
-            List<Map<Integer, String>> withdrawnRoutes = ((UpdateMessagePacket) bgpPacket).getWithdrawnRoutes(); //<length, IP_prefix>
-            List<Map<Integer, String>> networkLayerReachabilityInformation = ((UpdateMessagePacket) bgpPacket).getNetworkLayerReachabilityInformation(); //<length, IP_prefix>
-            PathAttributes pathAttributes = ((UpdateMessagePacket) bgpPacket).getPathAttributes();
+                Router r = Router.getRouterByName(destRouterName);
+                assert r != null;
+                TopologyTable topologyTable = r.getTopologyTable();
+                List<Map<Integer, String>> withdrawnRoutes = ((UpdateMessagePacket) bgpPacket).getWithdrawnRoutes(); //<length, IP_prefix>
+                List<Map<Integer, String>> networkLayerReachabilityInformation = ((UpdateMessagePacket) bgpPacket).getNetworkLayerReachabilityInformation(); //<length, IP_prefix>
+                PathAttributes pathAttributes = ((UpdateMessagePacket) bgpPacket).getPathAttributes();
 
-            // Delete the withdrawn routes
-            for (Map<Integer, String> entry : withdrawnRoutes) {
-                for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
+                try {
+                    // Delete the withdrawn routes
+                    for (Map<Integer, String> entry : withdrawnRoutes) {
+                        for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
 
-                    String prefix = entry2.getValue();
-                    int length = entry2.getKey();
-                    if (!removedRoutes) {
-                        removedRoutes = topologyTable.removeEntryByIp(prefix);
-                    } else {
-                        topologyTable.removeEntryByIp(prefix);
+                            String prefix = entry2.getValue();
+                            int length = entry2.getKey();
+
+                            if (!removedRoutes) {
+                                removedRoutes = topologyTable.removeEntryByIp(prefix);
+                            } else {
+                                topologyTable.removeEntryByIp(prefix);
+                            }
+                        }
                     }
+                } catch (Exception e) {
+                    System.out.println("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in removing the withdrawn routes - " + e.getMessage());
                 }
-            }
 
-            //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
-            //put Pathatribture and NLRI together
-            for (Map<Integer, String> entry : networkLayerReachabilityInformation) {
-                for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
-                    topologyTable.insertEntry(entry2.getValue(),pathAttributes);
+                try {
+                    //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
+                    //put Pathatribture and NLRI together
+                    for (Map<Integer, String> entry : networkLayerReachabilityInformation) {
+                        for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
+                            topologyTable.insertEntry(entry2.getValue(), pathAttributes);
+                        }
+                        //topologyTable.insertEntryNLRI(entry);
+                        //topologyTable.insertNewEntry(pathAttributes);
+                    }
+                } catch (Exception e) {
+                    throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in inserting the new routes in TopologyTable - " + e.getMessage());
                 }
-                //topologyTable.insertEntryNLRI(entry);
-                //topologyTable.insertNewEntry(pathAttributes);
+                r.printTopologyTable();
+                //update the BGP routing table
+                //if something changed, return true
+                addedRoutes = r.updateBGPRoutingTable();
+                if (addedRoutes || removedRoutes) {
+                    System.out.println("[" + destRouterName + "] Routing table updated!");
+                }
+                r.printRoutingTable();
+
+            } else {
+                throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Router " + destRouterName + " not found!");
             }
-            topologyTable.printTable();
-
-            //update the BGP routing table
-            //if something changed, return true
-            addedRoutes = r.updateBGPRoutingTable();
-            System.out.println("[" + destRouterName + "] Routing table updated!");
-            System.out.println("[" + destRouterName + "] Routing table: ");
-            r.printRoutingTable();
-
-        } else {
-            throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Router " + destRouterName + " not found!");
+            List<Boolean> output = new ArrayList<Boolean>();
+            output.add(removedRoutes);
+            output.add(addedRoutes);
+            return output;
+        } catch (Exception o) {
+            throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in updating the BGP table - " + o.getMessage());
         }
-        List<Boolean> output = new ArrayList<Boolean>();
-        output.add(removedRoutes);
-        output.add(addedRoutes);
-        return output;
     }
 
     @Override
@@ -254,7 +283,7 @@ public class ReceiveTcpPacket implements Runnable {
         try {
             this.receiveTcpPacket(bitArrayHdlc);
         } catch (Exception e) {
-            System.err.println("(Error in receiving tcp packet) - " + e.getMessage());
+            System.err.println("Error in Receiving TCP packet - " + e.getMessage());
         }
     }
 

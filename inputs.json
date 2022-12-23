@@ -4,13 +4,13 @@
 			"name" : "R1",
 			"interfaces": [
 				{
-					"name" : "fa0/1",
+					"name" : "fa1/0",
 					"ipAddress" : "10.0.0.1",
 					"subnetMask" : "255.255.255.0",
 					"as" : "100"
 				},
 				{
-					"name" : "fa0/2",
+					"name" : "fa1/1",
 					"ipAddress" : "10.1.0.4",
 					"subnetMask" : "255.255.255.0",
 					"as" : "100"
@@ -21,13 +21,13 @@
 			"name" : "R2",
 			"interfaces": [
 				{
-					"name" : "fa0/1",
+					"name" : "fa2/1",
 					"ipAddress" : "100.1.2.1",
 					"subnetMask" : "255.255.255.0",
 					"as" : "200"
 				},
 				{
-					"name" : "fa0/2",
+					"name" : "fa2/2",
 					"ipAddress" : "10.1.0.2",
 					"subnetMask" : "255.255.255.0",
 					"as" : "200"
@@ -38,13 +38,13 @@
 			"name" : "R3",
 			"interfaces": [
 				{
-					"name" : "fa0/1",
+					"name" : "fa3/1",
 					"ipAddress" : "10.0.0.2",
 					"subnetMask" : "255.255.255.0",
 					"as" : "300"
 				},
 				{
-					"name" : "fa0/2",
+					"name" : "fa3/2",
 					"ipAddress" : "100.1.2.3",
 					"subnetMask" : "255.255.255.0",
 					"as" : "300"

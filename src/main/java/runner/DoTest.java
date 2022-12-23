@@ -184,7 +184,8 @@ public class DoTest {
             SendKeepAliveMessage task = new SendKeepAliveMessage(entry.getKey(), (String) entry.getValue());
             ThreadPool.submit(task);
         });
-        
+
+        Thread.sleep(15000);
 
         AtomicInteger leonardo = new AtomicInteger();
         linkMap.entrySet().parallelStream().forEach(entry -> {
@@ -192,14 +193,14 @@ public class DoTest {
                 List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
                 List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
                 PathAttributes pathAttributes;
-                String sourceIP = "10.0.1.1";
+                String sourceIP = "10.0.0.1";
                 System.out.println("--------------------------------------------------------------Sending update message from " + sourceIP);
 
                 // filling lists with random data
                 Map<Integer, String> WithdrawnRoute = null;
-                for (int i = 0; i < 3; i++) {
+                for (int i = 2; i < 3; i++) {
                     WithdrawnRoute = new HashMap<>();
-                    WithdrawnRoute.put(i, "100.1.2." + i);
+                    WithdrawnRoute.put(i, "100.0.0." + i);
                     WithdrawnRoutes.add(WithdrawnRoute);
                 }
 
@@ -227,6 +228,7 @@ public class DoTest {
 
 
         // Select router to change state
+        /*
         Thread.sleep(2000);
         Router shutdownRouter = changeRouterStateFromInput();
 
@@ -274,7 +276,7 @@ public class DoTest {
                 }
             });
         }
-
+*/
 
         // TODO continue here
 

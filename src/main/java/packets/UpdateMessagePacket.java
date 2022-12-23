@@ -5,6 +5,7 @@ import multithread.SendTcpPacket;
 import utils.BinaryFunctions;
 import utils.ParserList;
 
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.List;
@@ -41,22 +42,26 @@ public class UpdateMessagePacket extends BgpPacket {
 
     public UpdateMessagePacket(String bitsArray) {
         super(bitsArray); // version, as, holdTime, id --> HEADER
+        try {
+            this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 16, Long.class);
+            this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 72, 16, Long.class);
 
-        this.WithdrawnRoutesLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 56, 16, Long.class);
-        this.TotalPathAttributeLength = (long) BinaryFunctions.bitsArrayToObject(bitsArray, 72, 16, Long.class);
+            this.PathAttributes = new PathAttributes(bitsArray.substring(88, 88 + (int) this.TotalPathAttributeLength));
 
-        this.PathAttributes = new PathAttributes(bitsArray.substring(88, 88 + (int) this.TotalPathAttributeLength));
+            String stringedWithdrawnRoutes = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 88 + (int) this.TotalPathAttributeLength,
+                    (int) this.WithdrawnRoutesLength, String.class);
+            String parsedWithdrawnRoutes = stringedWithdrawnRoutes.replaceAll("/:/", "\\."); // Replace : with .
+            this.WithdrawnRoutes = ParserList.parseString(parsedWithdrawnRoutes);
 
-        String stringedWithdrawnRoutes = (String) BinaryFunctions.bitsArrayToObject(bitsArray, 88 + (int) this.TotalPathAttributeLength,
-                (int) this.WithdrawnRoutesLength, String.class);
-        String parsedWithdrawnRoutes = stringedWithdrawnRoutes.replaceAll("/:/", "\\."); // Replace : with .
-        this.WithdrawnRoutes = ParserList.parseString(parsedWithdrawnRoutes);
+            String stringedNetworkLayerReachabilityInformation = (String) BinaryFunctions.bitsArrayToObject(bitsArray,
+                    88 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength,
+                    bitsArray.length() - (88 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength), String.class);
+            String parsedNetworkLayerReachabilityInformation = stringedNetworkLayerReachabilityInformation.replaceAll("/:/", "\\."); // Replace : with .
+            this.NetworkLayerReachabilityInformation = ParserList.parseString(parsedNetworkLayerReachabilityInformation);
 
-        String stringedNetworkLayerReachabilityInformation = (String) BinaryFunctions.bitsArrayToObject(bitsArray,
-                88 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength,
-                bitsArray.length() - (88 + (int) this.TotalPathAttributeLength + (int) this.WithdrawnRoutesLength), String.class);
-        String parsedNetworkLayerReachabilityInformation = stringedNetworkLayerReachabilityInformation.replaceAll("/:/", "\\."); // Replace : with .
-        this.NetworkLayerReachabilityInformation = ParserList.parseString(parsedNetworkLayerReachabilityInformation);
+        } catch (Exception e) {
+            System.out.println("Error in Deserializing UpdateMessagePacket: " + e.getMessage());
+        }
     }
 
     public String packetToBitArray() {
