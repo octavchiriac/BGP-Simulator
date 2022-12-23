@@ -50,7 +50,7 @@ public class SendUpdateMessage implements Runnable {
         Router r1 = Router.getRouterByIP(this.source);
         RouterInterface i1 = r1.getRouterInterfaceByIP(this.source);
 
-        BgpPacket packet1 = new UpdateMessagePacket(BGP_VERSION, Integer.parseInt(i1.getAs()), HOLD_TIMER, (long) Math.abs(Math.random() * 100000),
+        BgpPacket packet1 = new UpdateMessagePacket(BGP_VERSION, Integer.parseInt(i1.getAs()), 255, (long) Math.abs(Math.random() * 100000),
                 this.WithdrawnRoutes, this.PathAttributes, this.NetworkLayerReachabilityInformation);
 
         String bitArrayBgp1 = packet1.packetToBitArray();
