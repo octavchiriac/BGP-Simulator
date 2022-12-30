@@ -22,6 +22,18 @@ public class NeighborTable {
 		neighborInfo.put(ip, as);
 	}
 
+	public String getNeighborAS(String ip){
+		return neighborInfo.get(ip);
+	}
+
+	public ArrayList<String> getNeighborIPs(){
+		ArrayList<String> ips = new ArrayList<String>();
+		for(String ip : neighborInfo.keySet()){
+			ips.add(ip);
+		}
+		return ips;
+	}
+
 	public void editNeighbor(String ip, String newIp, String newAs){
 		neighborInfo.remove(ip);
 		neighborInfo.put(newIp, newAs);

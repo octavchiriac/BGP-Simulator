@@ -189,41 +189,56 @@ public class DoTest {
 
         AtomicInteger leonardo = new AtomicInteger();
         linkMap.entrySet().parallelStream().forEach(entry -> {
-            if(leonardo.get() ==0) {
-                List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
-                List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
-                PathAttributes pathAttributes;
-                String sourceIP = "10.0.0.1";
-                System.out.println("--------------------------------------------------------------Sending update message from " + sourceIP);
+            for (Router r: routers) {
+                //for each router take their neighbor table
+                NeighborTable tmpNeighborTable = r.getNeighborTable();
+                //get all the IP addresses of the neighbors
+                ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
+                //get all the interfaces for the router
+                ArrayList<RouterInterface> interfaces = r.getInterfaces();
 
-                // filling lists with random data
-                Map<Integer, String> WithdrawnRoute = null;
-                for (int i = 2; i < 3; i++) {
-                    WithdrawnRoute = new HashMap<>();
-                    WithdrawnRoute.put(i, "100.0.0." + i);
-                    WithdrawnRoutes.add(WithdrawnRoute);
+                if (leonardo.get() == 0) {
+                    //for (RouterInterface in : interfaces) {
+                        List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
+                        List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
+                        PathAttributes pathAttributes;
+
+                        String sourceIP = "10.0.0.1";
+                        //use as source IP the IP of the interface
+                        //String sourceIP = in.getIpAddress();
+
+                        System.out.println("--------------------------------------------------------------Sending update message from " + sourceIP);
+
+                        // filling lists with random data
+                        Map<Integer, String> WithdrawnRoute = null;
+                        for (int i = 2; i < 3; i++) {
+                            WithdrawnRoute = new HashMap<>();
+                            WithdrawnRoute.put(i, "100.0.0." + i);
+                            WithdrawnRoutes.add(WithdrawnRoute);
+                        }
+
+                        Map<Integer, String> NetworkLayerReachabilityInfo = null;
+                        for (int i = 0; i < 3; i++) {
+                            NetworkLayerReachabilityInfo = new HashMap<>();
+                            NetworkLayerReachabilityInfo.put(i, "10.0.0." + i);
+                            NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
+                        }
+
+                        // creating path attributes for AS_PATH field
+                        String[] pathSegmentsVal = new String[1];
+                        pathSegmentsVal[0] = sourceIP;
+                        PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal); // destinationIp parameter is wrong and not used, but it is required
+                        PathSegments[] psList = new PathSegments[1];
+                        psList[0] = ps;
+
+                        pathAttributes = new PathAttributes("1", psList, sourceIP);
+
+                        SendUpdateMessage task = new SendUpdateMessage(sourceIP, (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
+                        ThreadPool.submit(task);
+                        leonardo.getAndIncrement();
+                    }
                 }
-
-                Map<Integer, String> NetworkLayerReachabilityInfo = null;
-                for (int i = 0; i < 3; i++) {
-                    NetworkLayerReachabilityInfo = new HashMap<>();
-                    NetworkLayerReachabilityInfo.put(i, "10.0.0." + i);
-                    NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
-                }
-
-                // creating path attributes for AS_PATH field
-                String[] pathSegmentsVal = new String[1];
-                pathSegmentsVal[0] = sourceIP;
-                PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal); // destinationIp parameter is wrong and not used, but it is required
-                PathSegments[] psList = new PathSegments[1];
-                psList[0] = ps;
-
-                pathAttributes = new PathAttributes("1", psList, sourceIP);
-
-                SendUpdateMessage task = new SendUpdateMessage(sourceIP, (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
-                ThreadPool.submit(task);
-                leonardo.getAndIncrement();
-            }
+            //}
         });
 
 
