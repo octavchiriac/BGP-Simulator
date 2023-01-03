@@ -192,62 +192,64 @@ public class DoTest {
             if (leonardo.get() == 0) {
                 //for each router take their neighbor table and send update message to all neighbors
                 for (Router r: routers) {
-                    //for each neighbor in the neighbor table send update message
-                    NeighborTable tmpNeighborTable = r.getNeighborTable();
-                    //get all the IP addresses of the neighbors
-                    ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
                     //get all the interfaces for the router
                     ArrayList<RouterInterface> interfaces = r.getInterfaces();
+                    //send the update for each interface of the selected router
+                    for (RouterInterface in: interfaces) {
+                        //for each neighbor in the neighbor table send update message
+                        NeighborTable tmpNeighborTable = r.getNeighborTable();
+                        //get all the IP addresses of the neighbors
+                        ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
 
-                    //for (RouterInterface in : interfaces) {
-                    RouterInterface in = interfaces.get(0); //only one interface for now
+                        //RouterInterface in = interfaces.get(0); //only one interface for now
 
-                    List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
-                    List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
-                    PathAttributes pathAttributes;
+                        List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
+                        List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
+                        PathAttributes pathAttributes;
 
-                    //String sourceIP = "10.0.0.1";
-                    String sourceIP = in.getIpAddress();    //get the IP address of the interface and use it as source IP
+                        //String sourceIP = "10.0.0.1";
+                        String sourceIP = in.getIpAddress();    //get the IP address of the interface and use it as source IP
 
-                    System.out.println("--------------------------------------------------------------Sending update message from " + sourceIP);
+                        System.out.println("--------------------------------------------------------------Sending update message from " + sourceIP);
 
-                    // filling lists with random data
+                        // filling lists with random data
 
-                    Map<Integer, String> WithdrawnRoute = null;
-                    for (int i = 2; i < 3; i++) {
-                        WithdrawnRoute = new HashMap<>();
-                        WithdrawnRoute.put(i, "100.0.0." + i);
-                        WithdrawnRoutes.add(WithdrawnRoute);
+                        Map<Integer, String> WithdrawnRoute = null;
+                        for (int i = 2; i < 3; i++) {
+                            WithdrawnRoute = new HashMap<>();
+                            WithdrawnRoute.put(i, "100.0.0." + i);
+                            WithdrawnRoutes.add(WithdrawnRoute);
+                        }
+
+                        Map<Integer, String> NetworkLayerReachabilityInfo = null;
+                        /*
+                        for (int i = 0; i < 3; i++) {
+                            NetworkLayerReachabilityInfo = new HashMap<>();
+                            NetworkLayerReachabilityInfo.put(i, "10.0.0." + i);
+                            NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
+                        }*/
+
+                        // get the IP addresses of the neighbors and put it in the NLRI
+                        for (int i = 0; i < neighborIPs.size(); i++) {
+                            NetworkLayerReachabilityInfo = new HashMap<>();
+                            NetworkLayerReachabilityInfo.put(i, neighborIPs.get(i));
+                            NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
+                        }
+
+                        // creating path attributes for AS_PATH field
+                        String[] pathSegmentsVal = new String[1];
+                        pathSegmentsVal[0] = sourceIP;
+                        PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal); // destinationIp parameter is wrong and not used, but it is required
+                        PathSegments[] psList = new PathSegments[1];
+                        psList[0] = ps;
+
+                        pathAttributes = new PathAttributes("1", psList, sourceIP);
+
+                        SendUpdateMessage task = new SendUpdateMessage(sourceIP, (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
+                        ThreadPool.submit(task);
+
+                        leonardo.getAndIncrement();
                     }
-
-                    Map<Integer, String> NetworkLayerReachabilityInfo = null;
-                    /*
-                    for (int i = 0; i < 3; i++) {
-                        NetworkLayerReachabilityInfo = new HashMap<>();
-                        NetworkLayerReachabilityInfo.put(i, "10.0.0." + i);
-                        NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
-                    }*/
-
-                    // get the IP addresses of the neighbors and put it in the NLRI
-                    for(int i = 0; i < neighborIPs.size(); i++) {
-                        NetworkLayerReachabilityInfo = new HashMap<>();
-                        NetworkLayerReachabilityInfo.put(i, neighborIPs.get(i));
-                        NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
-                    }
-
-                    // creating path attributes for AS_PATH field
-                    String[] pathSegmentsVal = new String[1];
-                    pathSegmentsVal[0] = sourceIP;
-                    PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal); // destinationIp parameter is wrong and not used, but it is required
-                    PathSegments[] psList = new PathSegments[1];
-                    psList[0] = ps;
-
-                    pathAttributes = new PathAttributes("1", psList, sourceIP);
-
-                    SendUpdateMessage task = new SendUpdateMessage(sourceIP, (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
-                    ThreadPool.submit(task);
-
-                    leonardo.getAndIncrement();
                 }
             }
         });
