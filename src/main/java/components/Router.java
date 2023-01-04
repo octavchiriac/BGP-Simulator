@@ -135,7 +135,26 @@ public class Router implements Runnable {
             at.addRule();
             int i = 1;
             for (Map.Entry<String, PathAttributes> entry : routingTable.getBestRoutes().entrySet()) {
-                at.addRow(i, entry.getKey(), Arrays.toString(entry.getValue().getAS_PATH()), entry.getValue().getNEXT_HOP(), entry.getValue().getMULTI_EXIT_DISC(), entry.getValue().getLOCAL_PREF());
+
+                // Just printing the AS_PATH instead of the IP addresses to make it easier to read
+                PathSegments[] ps = entry.getValue().getAS_PATH();
+                ArrayList<String> asPaths = new ArrayList<String>();
+                for (PathSegments p : ps) {
+                    for (String ip : p.getPathSegmentValue()) {
+                        Router r = getRouterByIP(ip);
+                        assert r != null;
+                        r.getInterfaces().forEach(routerInterface -> {
+                            if (routerInterface.getIpAddress().equals(ip)) {
+                                if (!asPaths.contains(routerInterface.getAs())) {
+                                    asPaths.add(routerInterface.getAs());
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // Adding each row to the table
+                at.addRow(i, entry.getKey(), asPaths.toString(), entry.getValue().getNEXT_HOP(), entry.getValue().getMULTI_EXIT_DISC(), entry.getValue().getLOCAL_PREF());
                 at.addRule();
                 i++;
             }
