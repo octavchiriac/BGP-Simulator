@@ -1,21 +1,20 @@
 package components;
 
+import components.tblentries.NeighborTableEntry;
 import components.tblentries.PathAttributes;
 import components.tblentries.PathSegments;
 import de.vandermeer.asciitable.AsciiTable;
 import multithread.ReceiveTcpPacket;
-import multithread.SendTcpPacket;
 import multithread.ThreadPool;
 import utils.TypeHandlers;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static components.Globals.routers;
-import static runner.DoTest.establishTcpConnection;
 
 public class Router implements Runnable {
 
@@ -101,23 +100,8 @@ public class Router implements Runnable {
         this.tcpConnectedRouters = new ArrayList<>();
     }
 
-    public BGPRoutingTable getRoutingTable() {
-        return routingTable;
-    }
-
-
-    //function to insert values inside the routing table based on the neighbor table
-    public void insertFromNeighbour(String destinationIP, String destinationAS) {
-        neighborTable.addNeighbor(destinationIP, destinationAS);
-    }
-
     public NeighborTable getNeighborTable() {
         return neighborTable;
-    }
-
-
-    public void setTopologyTableEntry(String origin, PathSegments[] asPath, String nextHop) {
-        topologyTable.insertNewEntry(origin, asPath, nextHop);
     }
 
     public boolean updateBGPRoutingTable() {
@@ -273,10 +257,14 @@ public class Router implements Runnable {
             if (i.getDirectLink() != null) {
                 RouterInterface neighborRouter = getRouterInterfaceByIP(i.getDirectLink());
 
-                neighborTable.addNeighbor(neighborRouter.getIpAddress(), neighborRouter.getAs());
+                double directTrust = Math.random();
+                DecimalFormat df = new DecimalFormat("#.##");
+                directTrust = Double.parseDouble(df.format(directTrust));
+
+                neighborTable.addNeighbor(neighborRouter.getIpAddress(), neighborRouter.getAs(), directTrust);
 
                 System.out.println("[" + name + "] Discovered neighbor " + neighborRouter.getIpAddress() +
-                        " from AS " + neighborRouter.getAs());
+                        " from AS " + neighborRouter.getAs() + " with direct trust " + directTrust);
             }
         }
 
@@ -286,29 +274,26 @@ public class Router implements Runnable {
     public void printRouterInfo() {
         System.out.println(this.getName() + " " + this.getId());
 
-        for (RouterInterface inte : this.getInterfaces()) {
-            System.out.println("Interface Name: " + inte.getName());
-            System.out.println("IpAddress: " + inte.getIpAddress());
-            System.out.println("Mask: " + inte.getSubnetMask());
-            System.out.println("AS: " + inte.getAs());
-            System.out.println("Direct link: " + inte.getDirectLink());
+        for (RouterInterface inter : this.getInterfaces()) {
+            System.out.println("Interface Name: " + inter.getName());
+            System.out.println("IpAddress: " + inter.getIpAddress());
+            System.out.println("Mask: " + inter.getSubnetMask());
+            System.out.println("AS: " + inter.getAs());
+            System.out.println("Direct link: " + inter.getDirectLink());
             System.out.println("\n");
         }
         System.out.println("########################");
     }
 
     public void printNeighborTable() {
-        System.out.println("[" + this.getName() + "] Neighbor table: \n" + this.getNeighborTable());
+        synchronized (Globals.lock) {
+            System.out.println("[" + this.getName() + "] Neighbor table:");
+            for (NeighborTableEntry entry : this.getNeighborTable().getNeighborInfo()) {
+                System.out.println("IP: " + entry.getIp() + " AS: " + entry.getAs() + " DirectTrust: " + entry.getTrust());
+            }
+        }
     }
 
-    public void setTopologyTable(TopologyTable topologyTable) {
-        this.topologyTable = topologyTable;
-    }
-
-
-    /**
-     *
-     */
     @Override
     public void run() {
         System.out.println("[" + name + "] Router starting");

@@ -1,7 +1,9 @@
 package components;
 
+import components.tblentries.NeighborTableEntry;
+
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 /*
  * "BGP Neighbor Table – table containing information about BGP neighbors"
@@ -10,43 +12,50 @@ import java.util.HashMap;
  */
 public class NeighborTable {
 
-	// pair neighborIp, neighborAS
-	public HashMap<String,String> neighborInfo;
+	public List<NeighborTableEntry> neighborInfo;
 
 	public NeighborTable(){
 		super();
-		neighborInfo = new HashMap<String,String>();
+		neighborInfo = new ArrayList<>();
 	}
 
-	public void addNeighbor(String ip, String as){
-		neighborInfo.put(ip, as);
+	public void addNeighbor(String ip, String as, double trust){
+		neighborInfo.add(new NeighborTableEntry(ip, as, trust));
 	}
 
-	public String getNeighborAS(String ip){
-		return neighborInfo.get(ip);
+	public String getNeighborAsByIp(String ip){
+		for (NeighborTableEntry entry : neighborInfo) {
+			if (entry.getIp().equals(ip)) {
+				return entry.getAs();
+			}
+		}
+
+		return null;
+	}
+
+	public double getNeighborTrustByIp(String ip) {
+		for (NeighborTableEntry entry : neighborInfo) {
+			if (entry.getIp().equals(ip)) {
+				return entry.getTrust();
+			}
+		}
+
+		return 0;
 	}
 
 	public ArrayList<String> getNeighborIPs(){
-		ArrayList<String> ips = new ArrayList<String>();
-		for(String ip : neighborInfo.keySet()){
-			ips.add(ip);
+		ArrayList<String> ips = new ArrayList<>();
+
+		for (NeighborTableEntry entry : neighborInfo) {
+			ips.add(entry.getIp());
 		}
+
 		return ips;
 	}
 
-	public void editNeighbor(String ip, String newIp, String newAs){
-		neighborInfo.remove(ip);
-		neighborInfo.put(newIp, newAs);
-	}
-
-	public void deleteNeighbor(String ip){
-		neighborInfo.remove(ip);
-	}
-
-	public HashMap<String, String> getNeighborInfo() {
+	public List<NeighborTableEntry> getNeighborInfo() {
 		return neighborInfo;
 	}
-
 
 	@Override
 	public String toString() {

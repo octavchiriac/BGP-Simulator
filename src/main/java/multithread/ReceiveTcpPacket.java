@@ -1,12 +1,12 @@
 package multithread;
 
 import components.*;
+import components.tblentries.NeighborTableEntry;
 import components.tblentries.PathAttributes;
 import components.tblentries.PathSegments;
 import packets.*;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -141,11 +141,14 @@ public class ReceiveTcpPacket implements Runnable {
                         if (isUpdated.get(0) || isUpdated.get(1)) {
                             // get router's neighbors
                             UpdateMessagePacket finalBgpPacket = bgpPacket2;
-                            dest.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
+                            for (NeighborTableEntry entry : dest.getNeighborTable().getNeighborInfo()) {
+                                String ip = entry.getIp();
                                 // avoids to send update to the router that sent the update in the first place
-                                if (!sourceIpAddress.equals(key)) {
+                                if (!sourceIpAddress.equals(ip)) {
                                     // send an update to neighbor for each change
-                                    System.out.println("[" + dest.getName() + " -> " + key + "] Forwarding UPDATE (Withdrawn routes + New routes) packet to neighbor " + key + " @ " + getRouterByIP(key).getName());
+                                    System.out.println("[" + dest.getName() + " -> " + ip +
+                                            "] Forwarding UPDATE (Withdrawn routes + New routes) packet to neighbor " +
+                                            ip + " @ " + getRouterByIP(ip).getName());
 
                                     // adding pathsegment to tell that the update went through this router
                                     String[] segmentVal = new String[1];
@@ -157,13 +160,13 @@ public class ReceiveTcpPacket implements Runnable {
                                     finalBgpPacket.getPathAttributes().setNEXT_HOP(sourceIpAddress);
 
                                     // send update packet
-                                    SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, key,
+                                    SendUpdateMessage task = new SendUpdateMessage(destinationIpAddress, ip,
                                             finalBgpPacket.getWithdrawnRoutes(),
                                             finalBgpPacket.getPathAttributes(),
                                             finalBgpPacket.getNetworkLayerReachabilityInformation());
                                     ThreadPool.submit(task);
                                 }
-                            });
+                            }
                         } else {
                             // NO FORWARDING - Print routing table & topology table
                             /*
@@ -256,14 +259,16 @@ public class ReceiveTcpPacket implements Runnable {
                 } catch (Exception e) {
                     throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in inserting the new routes in TopologyTable - " + e.getMessage());
                 }
-                r.printTopologyTable();
+//                r.printTopologyTable();
                 //update the BGP routing table
                 //if something changed, return true
                 addedRoutes = r.updateBGPRoutingTable();
                 if (addedRoutes || removedRoutes) {
                     System.out.println("[" + destRouterName + "] Routing table updated!");
                 }
-                r.printRoutingTable();
+//                r.printRoutingTable();
+
+                r.printNeighborTable();
 
             } else {
                 throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Router " + destRouterName + " not found!");

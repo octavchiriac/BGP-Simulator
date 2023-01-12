@@ -139,7 +139,7 @@ public class DoTest {
         return changedRouter;
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         // Parse input file
         ParseInputFile parseInput = new ParseInputFile();
@@ -201,33 +201,24 @@ public class DoTest {
                         //get all the IP addresses of the neighbors
                         ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
 
-                        //RouterInterface in = interfaces.get(0); //only one interface for now
-
                         List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
                         List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
                         PathAttributes pathAttributes;
 
-                        //String sourceIP = "10.0.0.1";
                         String sourceIP = in.getIpAddress();    //get the IP address of the interface and use it as source IP
 
                         System.out.println("--------------------------------------------------------------Sending update message from " + sourceIP);
 
                         // filling lists with random data
 
-                        Map<Integer, String> WithdrawnRoute = null;
+                        Map<Integer, String> WithdrawnRoute;
                         for (int i = 2; i < 3; i++) {
                             WithdrawnRoute = new HashMap<>();
                             WithdrawnRoute.put(i, "100.0.0." + i);
                             WithdrawnRoutes.add(WithdrawnRoute);
                         }
 
-                        Map<Integer, String> NetworkLayerReachabilityInfo = null;
-                        /*
-                        for (int i = 0; i < 3; i++) {
-                            NetworkLayerReachabilityInfo = new HashMap<>();
-                            NetworkLayerReachabilityInfo.put(i, "10.0.0." + i);
-                            NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
-                        }*/
+                        Map<Integer, String> NetworkLayerReachabilityInfo;
 
                         // get the IP addresses of the neighbors and put it in the NLRI
                         for (int i = 0; i < neighborIPs.size(); i++) {
@@ -305,8 +296,6 @@ public class DoTest {
             });
         }
 */
-
-        // TODO continue here
 
 //        ThreadPool.stop();
     }

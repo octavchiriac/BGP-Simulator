@@ -9,6 +9,7 @@ public class RouterInterface {
 	private String directLink;
 	private String as;
 	BGPStates state;
+	double totalTrust;
 
 	public RouterInterface(String name, String ipAddress, String subnetMask, String as) {
 		super();
@@ -18,6 +19,7 @@ public class RouterInterface {
 		this.as = as;
 		this.isUp = true;
 		this.state = BGPStates.Idle;
+		this.totalTrust = 0;
 	}
 
 	public String getName() {
@@ -76,5 +78,12 @@ public class RouterInterface {
 	public void setAs(String as) {
 		this.as = as;
 	}
-	
+
+	public double getTotalTrust() {
+		return totalTrust;
+	}
+
+	public void setTotalTrust(double totalTrust) {
+		this.totalTrust = totalTrust;
+	}
 }
