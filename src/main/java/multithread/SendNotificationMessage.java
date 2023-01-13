@@ -21,11 +21,9 @@ public class SendNotificationMessage implements Runnable{
     public void run() {
         Router r1 = Router.getRouterByIP(this.source);
         assert r1 != null;
-        RouterInterface i1 = r1.getRouterInterfaceByIP(this.source);
 
         Router r2 = Router.getRouterByIP(this.destination);
         assert r2 != null;
-        RouterInterface i2 = r2.getRouterInterfaceByIP(this.destination);
 
         BgpPacket packet1 = new BgpPacket(NOTIFICATION_DISCONNECT, 0, 0, 0);
         String bitArrayBgp1 = packet1.packetToBitArray();

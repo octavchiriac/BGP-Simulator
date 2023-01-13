@@ -268,7 +268,7 @@ public class ReceiveTcpPacket implements Runnable {
                 }
 //                r.printRoutingTable();
 
-                r.printNeighborTable();
+//                r.printNeighborTable();
 
             } else {
                 throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Router " + destRouterName + " not found!");

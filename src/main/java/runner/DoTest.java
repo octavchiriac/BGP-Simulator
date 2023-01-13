@@ -246,6 +246,47 @@ public class DoTest {
         });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+        Thread.sleep(15000);
+
+
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            double votingCoefficient = 0;
+            double directTrust = 0;
+            double totalTrust;
+            Router r1 = Router.getRouterByIP(entry.getKey());
+            Router r2 = Router.getRouterByIP((String) entry.getValue());
+
+            NeighborTable tmpNeighborTable = r2.getNeighborTable();
+            //get all the IP addresses of the neighbors
+            ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
+
+            for (String ip : neighborIPs) {
+                if(!ip.equals(entry.getKey())) {
+                    votingCoefficient += 1 / tmpNeighborTable.getNeighborTrustByIp(ip);
+                } else {
+                    directTrust = tmpNeighborTable.getNeighborTrustByIp(ip);
+                }
+            }
+
+            totalTrust = (1 + votingCoefficient) * (1 / directTrust);
+
+            System.out.println(r2.getName() + " #################" + totalTrust);
+
+        });
+
+
         // Select router to change state
         /*
         Thread.sleep(2000);
