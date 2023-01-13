@@ -97,6 +97,9 @@ public class BGPRoutingTable {
         return (HashMap<String, PathAttributes>) bestRoutes;
     }
 
+    public void insertNewEntry(String destinationIp, String origin, PathSegments[] asPath, String nextHop) {
+        bestRoutes.put(destinationIp, new PathAttributes(origin, asPath, nextHop));
+    }
     @Override
     public String toString() {
         String result = "";

@@ -1,7 +1,10 @@
 package utils;
 
+import components.Globals;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class IpFunctions {
 
@@ -40,4 +43,16 @@ public class IpFunctions {
 		
 		return myNewHashMap;
 	}
+
+    public static String getIpFromAs(String s) {
+        AtomicReference<String> ip = new AtomicReference<>("");
+        Globals.routers.forEach(router -> {
+            router.getInterfaces().forEach(anInterface -> {
+                if (anInterface.getAs().equals(s)) {
+                    ip.set(anInterface.getIpAddress());
+                }
+            });
+        });
+        return ip.get();
+    }
 }
