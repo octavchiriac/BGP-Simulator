@@ -2,9 +2,9 @@ package multithread;
 
 import components.Globals;
 import components.Router;
-import packets.BgpPacket;
+import packets.TrustMessagePacket;
 
-import static components.Globals.TRUST_EXCHANGE;
+import static components.Globals.BGP_VERSION;
 
 public class SendTrustExchangeMessage implements Runnable {
 
@@ -26,9 +26,7 @@ public class SendTrustExchangeMessage implements Runnable {
         Router r2 = Router.getRouterByIP(this.destination);
         assert r2 != null;
 
-        //TODO calculate trust and add it in the message, parse it and display
-
-        BgpPacket packet1 = new BgpPacket(TRUST_EXCHANGE, 0, 0, 0);
+        TrustMessagePacket packet1 = new TrustMessagePacket(BGP_VERSION, 0,0,0, this.totalTrust);
         String bitArrayBgp1 = packet1.packetToBitArray();
 
         if (r1.getTcpConnectedRouters().contains(r2)) {

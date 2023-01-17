@@ -85,6 +85,8 @@ public class SendTcpPacket implements Runnable{
 			packetType = "KEEPALIVE";
 		} else if(isPsh && isAck && data.charAt(5) == '1' && data.charAt(6) == '1') {
 			packetType = "NOTIFICATION";
+		} else if(isPsh && isAck && data.charAt(5) == '1' && data.charAt(7) == '1') {
+			packetType = "TRUSTRATE";
 		} else if (isPsh && isAck && data.charAt(5) == '1') {
 			packetType = "OPEN";
 		} else if (isPsh && isAck && data.charAt(6) == '1') {

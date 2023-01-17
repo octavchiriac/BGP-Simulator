@@ -97,6 +97,20 @@ public class ReceiveTcpPacket implements Runnable {
                     System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP state : Connect" + "\033[0m");
                 }
 
+                // Receiving TRUSTRATE packet
+                else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(5) == '1' && tcpPacket2.getData().charAt(7) == '1') {
+                    System.out.println("[" + srcRouterName + " -> " + destRouterName + "] TRUSTRATE packet sucessfully received on interface " + interfaceName);
+
+                    TrustMessagePacket bgpPacket;
+                    try {
+                        String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
+                        bgpPacket = new TrustMessagePacket(stringedPkt);
+                    } catch (Exception e) {
+                        throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in parsing the UPDATE packet - " + e.getMessage());
+                    }
+
+                    double totalTrust = bgpPacket.getTotalTrust();
+                }
 
                 // Receiving OPEN packet
                 else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(5) == '1') {
@@ -169,10 +183,10 @@ public class ReceiveTcpPacket implements Runnable {
                             }
                         } else {
                             // NO FORWARDING - Print routing table & topology table
-                            /*
-                            dest.printRoutingTable();
-                            dest.printTopologyTable();
-                            */
+
+//                            dest.printRoutingTable();
+//                            dest.printTopologyTable();
+
                             System.out.println("[" + dest.getName() + " - " + destInt.getName() + "] Update Packet has not been forwarded to neighbors");
                         }
                     } catch (Exception e) {
@@ -180,6 +194,7 @@ public class ReceiveTcpPacket implements Runnable {
                     }
 
                 }
+
 
                 // Receiving SYN + ACK packet
                 else if (tcpPacket2.isSyn() && tcpPacket2.isAck()) {
@@ -209,6 +224,11 @@ public class ReceiveTcpPacket implements Runnable {
                 }
             }
         }
+    }
+
+    public boolean updateRoutingTableTrusts(String srcIp, String destIp, double trust) {
+
+        return false;
     }
 
     //takes the update message and insert the value in the table, return a boolean if the entry if something has changed
