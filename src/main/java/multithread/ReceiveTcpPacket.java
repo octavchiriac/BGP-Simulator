@@ -246,9 +246,19 @@ public class ReceiveTcpPacket implements Runnable {
                 try {
                     //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
                     //put Pathatribture and NLRI together
+                    boolean skip = false;
                     for (Map<Integer, String> entry : networkLayerReachabilityInformation) {
                         for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
-                            topologyTable.insertEntry(entry2.getValue(), pathAttributes);
+                            // avoid to insert in the table his IP address and comeback traffic
+                            for (RouterInterface inter : r.getEnabledInterfaces()) {
+                                if (inter.getIpAddress().equals(entry2.getValue())) {
+                                    skip = true;
+                                    break;
+                                }
+                            }
+                            if (!skip) {
+                                topologyTable.insertEntry(entry2.getValue(), pathAttributes);
+                            }
                         }
                         //topologyTable.insertEntryNLRI(entry);
                         //topologyTable.insertNewEntry(pathAttributes);

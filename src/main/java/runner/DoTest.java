@@ -99,7 +99,7 @@ public class DoTest {
      *  Router changedRouter = addEntryInRoutingTable();
      *  changedRouter.getTopologyTable().printTable();
      */
-    private static void customizeRoutingTable() {
+    private static void customizeRoutingTable() throws InterruptedException {
         boolean wrongInput = true;
         Router changedRouter = null;
         Scanner input = new Scanner(System.in);
@@ -113,39 +113,44 @@ public class DoTest {
                 wrongInput = false;
             } else {
                 synchronized (Globals.lock) {
+                    String routerName = "";
+                    String tableEntry = "";
                     try {
-                        String routerName = line.substring(0, line.indexOf(" "));
-                        String tableEntry = line.substring(line.indexOf(" ") + 1);
-
-                        if (Globals.routerNames.contains(routerName)) {
-                            wrongInput = false;
-                            Router r = Router.getRouterByName(routerName);
-                            changedRouter = r;
-
-                            String destinationIp = tableEntry.split(" ")[0];
-                            String asList = tableEntry.split(" ")[1];
-                            String nextHop = tableEntry.split(" ")[2];
-                            String[] asArray = asList.split(",");
-
-                            String[] asIpArray = new String[asArray.length];
-                            for (int i = 0; i < asArray.length; i++) {
-                                asIpArray[i] = IpFunctions.getIpFromAs(asArray[i]);
-                            }
-
-                            BGPRoutingTable topologyTable = r.getRoutingTable();
-
-                            topologyTable.insertNewEntry(destinationIp, "0.0.0.0",
-                                    ArrayUtils.toArray(new PathSegments(destinationIp, asIpArray)), nextHop);
-                            System.out.println("Entry added to routing table of " + r.getName());
-                            System.out.println("Propagating new information to neighbors...");
-                            // Propagate new information to neighbors of this router
-                            r.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
-                                System.out.println("[" + r.getName() + " -> " + key + "] Forwarding custom UPDATE to neighbor " + key + " @ " + Objects.requireNonNull(getRouterByIP(key)).getName());
-                                sendUpdateMessage(r, key);
-                            });
-                        }
+                        routerName = line.substring(0, line.indexOf(" "));
+                        tableEntry = line.substring(line.indexOf(" ") + 1);
                     } catch (Exception e) {
                         System.err.println("Wrong input format. Please try again or type \"exit\" to skip");
+                    }
+
+                    if (Globals.routerNames.contains(routerName)) {
+                        Router r = Router.getRouterByName(routerName);
+                        changedRouter = r;
+
+                        String destinationIp = tableEntry.split(" ")[0];
+                        String asList = tableEntry.split(" ")[1];
+                        String nextHop = tableEntry.split(" ")[2];
+                        String[] asArray = asList.split(",");
+
+                        String[] asIpArray = new String[asArray.length];
+                        for (int i = 0; i < asArray.length; i++) {
+                            asIpArray[i] = IpFunctions.getIpFromAs(asArray[i]);
+                        }
+
+                        System.out.println("destinationIp: " + destinationIp + " asList: " + asList + " nextHop: " + nextHop + " asIpArray: " + Arrays.toString(asIpArray));
+
+                        BGPRoutingTable topologyTable = r.getRoutingTable();
+
+                        topologyTable.insertNewEntry(destinationIp, "0.0.0.0",
+                                ArrayUtils.toArray(new PathSegments(destinationIp, asIpArray)), nextHop);
+                        System.out.println("Entry added to routing table of " + r.getName());
+                        r.printRoutingTable();
+                        Thread.sleep(1000);
+                        System.out.println("Propagating new information to neighbors...");
+                        // Propagate new information to neighbors of this router
+                        r.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
+                            System.out.println("[" + r.getName() + " -> " + key + "] Forwarding custom UPDATE to neighbor " + key + " @ " + Objects.requireNonNull(getRouterByIP(key)).getName());
+                            sendUpdateMessage(r, key);
+                        });
                     }
                 }
             }
