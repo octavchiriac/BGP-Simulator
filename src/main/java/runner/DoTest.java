@@ -126,7 +126,7 @@ public class DoTest {
                         TopologyTable topologyTable = r.getTopologyTable();
 
                         topologyTable.insertNewEntry("0.0.0.0",
-                                ArrayUtils.toArray(new PathSegments(destinationIp, asArray)), nextHop);
+                                ArrayUtils.toArray(new PathSegments(destinationIp, asArray)), nextHop, 0);
                     }
                 }
 
@@ -185,7 +185,7 @@ public class DoTest {
             ThreadPool.submit(task);
         });
 
-        Thread.sleep(15000);
+        Thread.sleep(25000);
 
         AtomicInteger leonardo = new AtomicInteger();
         linkMap.entrySet().parallelStream().forEach(entry -> {
@@ -234,7 +234,7 @@ public class DoTest {
                         PathSegments[] psList = new PathSegments[1];
                         psList[0] = ps;
 
-                        pathAttributes = new PathAttributes("1", psList, sourceIP);
+                        pathAttributes = new PathAttributes("1", psList, sourceIP, 0);
 
                         SendUpdateMessage task = new SendUpdateMessage(sourceIP, (String) entry.getValue(), WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
                         ThreadPool.submit(task);
@@ -245,6 +245,9 @@ public class DoTest {
             }
         });
 
+        Router changedRouter = addEntryInRoutingTable();
+        Thread.sleep(10000);
+        changedRouter.printRoutingTable();
 
 
 
@@ -256,35 +259,39 @@ public class DoTest {
 
 
 
-
-
-        Thread.sleep(15000);
-
-
-        linkMap.entrySet().parallelStream().forEach(entry -> {
-            double votingCoefficient = 0;
-            double directTrust = 0;
-            double totalTrust;
-            Router r1 = Router.getRouterByIP(entry.getKey());
-            Router r2 = Router.getRouterByIP((String) entry.getValue());
-
-            NeighborTable tmpNeighborTable = r2.getNeighborTable();
-            //get all the IP addresses of the neighbors
-            ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
-
-            for (String ip : neighborIPs) {
-                if(!ip.equals(entry.getKey())) {
-                    votingCoefficient += 1 / tmpNeighborTable.getNeighborTrustByIp(ip);
-                } else {
-                    directTrust = tmpNeighborTable.getNeighborTrustByIp(ip);
-                }
-            }
-
-            totalTrust = (1 + votingCoefficient) * (1 / directTrust);
-
-            System.out.println(r2.getName() + " #################" + totalTrust);
-
-        });
+//        Thread.sleep(15000);
+//
+//
+//        linkMap.entrySet().parallelStream().forEach(entry -> {
+//            double votingCoefficient = 0;
+//            double directTrust = 0;
+//            double totalTrust;
+//            Router r1 = Router.getRouterByIP(entry.getKey());
+//            Router r2 = Router.getRouterByIP((String) entry.getValue());
+//
+//            NeighborTable tmpNeighborTable = r2.getNeighborTable();
+//            //get all the IP addresses of the neighbors
+//            ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
+//
+//            // calculate voting coefficient from neighbors (1/T1 + 1/T2 + ...)
+//            for (String ip : neighborIPs) {
+//                if(!ip.equals(entry.getKey())) {
+//                    votingCoefficient += 1 / tmpNeighborTable.getNeighborTrustByIp(ip);
+//                } else {
+//                    directTrust = tmpNeighborTable.getNeighborTrustByIp(ip);
+//                }
+//            }
+//
+//            /*
+//             * calculate recommendation coefficient by formula (1 + votingCoefficient) * 1/directTrust, as described in
+//             * HYBRID TRUST MODEL FOR INTERNET ROUTING (Pekka Rantala, Seppo Virtanen and Jouni Isoaho)
+//             */
+//            totalTrust = (1 + votingCoefficient) * (1 / directTrust);
+//
+//            SendTrustExchangeMessage task = new SendTrustExchangeMessage(entry.getKey(), (String) entry.getValue(), totalTrust);
+//            ThreadPool.submit(task);
+//
+//        });
 
 
         // Select router to change state

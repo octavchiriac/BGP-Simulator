@@ -16,11 +16,13 @@ public class PathAttributes {
     private String LOCAL_PREF = "";
     private String ATOMIC_AGGREGATE = "";
     private String AGGREGATOR = "";
+    private double TRUSTRATE = 0;
 
-    public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP) {
+    public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP, double TRUSTRATE) {
         this.ORIGIN = ORIGIN; // IGP, EGP, INCOMPLETE -- 0, 1, 2 --> should be always 1
         this.AS_PATH = AS_PATH;
         this.NEXT_HOP = NEXT_HOP;
+        this.TRUSTRATE = TRUSTRATE;
     }
 
     public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP, String MULTI_EXIT_DISC, String LOCAL_PREF, String ATOMIC_AGGREGATE, String AGGREGATOR) {
@@ -109,7 +111,10 @@ public class PathAttributes {
     public String getAGGREGATOR() {
         return AGGREGATOR;
     }
-
+    public double getTRUSTRATE() { return TRUSTRATE; }
+    public void setTRUSTRATE(double TRUSTRATE) {
+        this.TRUSTRATE = TRUSTRATE;
+    }
     public void setMULTI_EXIT_DISC(String MULTI_EXIT_DISC) {
         this.MULTI_EXIT_DISC = MULTI_EXIT_DISC;
     }

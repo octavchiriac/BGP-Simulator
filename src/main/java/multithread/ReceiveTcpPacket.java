@@ -110,6 +110,8 @@ public class ReceiveTcpPacket implements Runnable {
                     }
 
                     double totalTrust = bgpPacket.getTotalTrust();
+
+                    this.updateRoutingTableTrusts(sourceIpAddress, destinationIpAddress, totalTrust);
                 }
 
                 // Receiving OPEN packet
@@ -164,7 +166,7 @@ public class ReceiveTcpPacket implements Runnable {
                                             "] Forwarding UPDATE (Withdrawn routes + New routes) packet to neighbor " +
                                             ip + " @ " + getRouterByIP(ip).getName());
 
-                                    // adding pathsegment to tell that the update went through this router
+                                    // adding path segment to tell that the update went through this router
                                     String[] segmentVal = new String[1];
                                     segmentVal[0] = destinationIpAddress;
                                     PathSegments pathSegments = new PathSegments(destinationIpAddress, segmentVal);
@@ -228,6 +230,28 @@ public class ReceiveTcpPacket implements Runnable {
 
     public boolean updateRoutingTableTrusts(String srcIp, String destIp, double trust) {
 
+        Router r = Router.getRouterByIP(srcIp);
+        assert r != null;
+        TopologyTable topologyTable = r.getTopologyTable();
+
+        System.out.println("################################ " + r.getName() + " " + destIp + " " + trust);
+
+//        for (Map.Entry<String, PathAttributes> entry : topologyTable.getTopTable().entrySet()) {
+//            if(entry.getKey().equals(destIp)) {
+//                PathAttributes attributes = entry.getValue();
+//                attributes.setTRUSTRATE(trust);
+////                topologyTable.addTrustToEntryByIp(entry.getKey(), attributes);
+//            }
+//        }
+
+//        r.setTopologyTable(topologyTable);
+
+        //update the BGP routing table
+        //if something changed, return true
+//        boolean addedRoutes = r.updateBGPRoutingTable();
+
+        r.printRoutingTable();
+
         return false;
     }
 
@@ -236,7 +260,7 @@ public class ReceiveTcpPacket implements Runnable {
     public List<Boolean> updateTable(String srcRouterName, String destRouterName, BgpPacket bgpPacket) throws Exception {
         try {
             //get the router by the name
-            boolean addedRoutes = false;
+            boolean addedRoutes;
             boolean removedRoutes = false;
             if (Globals.routerNames.contains(destRouterName)) {
 
@@ -253,7 +277,6 @@ public class ReceiveTcpPacket implements Runnable {
                         for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
 
                             String prefix = entry2.getValue();
-                            int length = entry2.getKey();
 
                             if (!removedRoutes) {
                                 removedRoutes = topologyTable.removeEntryByIp(prefix);
@@ -268,32 +291,32 @@ public class ReceiveTcpPacket implements Runnable {
 
                 try {
                     //insert into the topology table the entry <String origin, <String destinationIp, String[] pathSegmentValue>, String nextHop>
-                    //put Pathatribture and NLRI together
+                    //put PathAttribute and NLRI together
                     for (Map<Integer, String> entry : networkLayerReachabilityInformation) {
                         for (Map.Entry<Integer, String> entry2 : entry.entrySet()) {
                             topologyTable.insertEntry(entry2.getValue(), pathAttributes);
                         }
-                        //topologyTable.insertEntryNLRI(entry);
-                        //topologyTable.insertNewEntry(pathAttributes);
                     }
                 } catch (Exception e) {
                     throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in inserting the new routes in TopologyTable - " + e.getMessage());
                 }
+
+                //update the topology table
+                r.setTopologyTable(topologyTable);
 //                r.printTopologyTable();
+
                 //update the BGP routing table
                 //if something changed, return true
                 addedRoutes = r.updateBGPRoutingTable();
                 if (addedRoutes || removedRoutes) {
                     System.out.println("[" + destRouterName + "] Routing table updated!");
                 }
-//                r.printRoutingTable();
 
-//                r.printNeighborTable();
-
+                r.printRoutingTable();
             } else {
                 throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] Router " + destRouterName + " not found!");
             }
-            List<Boolean> output = new ArrayList<Boolean>();
+            List<Boolean> output = new ArrayList<>();
             output.add(removedRoutes);
             output.add(addedRoutes);
             return output;

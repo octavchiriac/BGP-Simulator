@@ -63,7 +63,6 @@ public class BGPRoutingTable {
 
         for (Map.Entry<String, PathAttributes> entry : topTable.entrySet()) {
             String destIP = entry.getKey();
-            PathSegments[] tmpPath= entry.getValue().getAS_PATH();
 
             if(bestRoutes.get(destIP) != null){
                 // Compares existing table entry with the new one, deciding the best based on some criteria

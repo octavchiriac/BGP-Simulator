@@ -14,7 +14,7 @@ public class Globals {
 	public static ArrayList<String> routerNames = new ArrayList<>();
 	public static Map<String, Object> linkMap;
 	public static int BGP_VERSION = 4;
-	public static int HOLD_TIMER = 15000;
+	public static int HOLD_TIMER = 20000;
 	public static int NOTIFICATION_DISCONNECT = 6;
 	public static final Object lock = new Object();
 }

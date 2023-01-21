@@ -27,7 +27,6 @@ public class Router implements Runnable {
     public BGPRoutingTable routingTable;
     private BlockingQueue<String> queue;
     private NeighborTable neighborTable;
-
     private ArrayList<Router> tcpConnectedRouters;
 
     public Router(String name) {
@@ -114,7 +113,7 @@ public class Router implements Runnable {
             AsciiTable at = new AsciiTable();
             at.addRule();
             at.addRule();
-            at.addRow("ID", "Destination IP", "AS_PATH", "NEXT_HOP", "MULTI_EXIT_DISC", "LOCAL_PREF");
+            at.addRow("ID", "Destination IP", "AS_PATH", "NEXT_HOP", "MULTI_EXIT_DISC", "LOCAL_PREF", "TRUSTRATE");
             at.addRule();
             at.addRule();
             int i = 1;
@@ -138,7 +137,8 @@ public class Router implements Runnable {
                 }
 
                 // Adding each row to the table
-                at.addRow(i, entry.getKey(), asPaths.toString(), entry.getValue().getNEXT_HOP(), entry.getValue().getMULTI_EXIT_DISC(), entry.getValue().getLOCAL_PREF());
+                at.addRow(i, entry.getKey(), asPaths.toString(), entry.getValue().getNEXT_HOP(),
+                        entry.getValue().getMULTI_EXIT_DISC(), entry.getValue().getLOCAL_PREF(), entry.getValue().getTRUSTRATE());
                 at.addRule();
                 i++;
             }
@@ -165,6 +165,10 @@ public class Router implements Runnable {
 
     public TopologyTable getTopologyTable() {
         return topologyTable;
+    }
+
+    public void setTopologyTable(TopologyTable topologyTable) {
+        this.topologyTable = topologyTable;
     }
 
     public ArrayList<Router> getTcpConnectedRouters() {
@@ -257,7 +261,7 @@ public class Router implements Runnable {
             if (i.getDirectLink() != null) {
                 RouterInterface neighborRouter = getRouterInterfaceByIP(i.getDirectLink());
 
-                double directTrust = Math.random();
+                double directTrust = Math.random() + 0.1;
                 DecimalFormat df = new DecimalFormat("#.##");
                 directTrust = Double.parseDouble(df.format(directTrust));
 

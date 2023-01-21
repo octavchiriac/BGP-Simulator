@@ -17,7 +17,6 @@ import java.util.Map;
  */
 public class TopologyTable {
 
-    //public ArrayList<TopologyTableEntry> listRIB; //stores all the possible paths
     public ArrayList<PathAttributes> listRIB; //stores all the possible paths
     List<Map<Integer, String>> NLRI; //stores the NLRI, the prefix and the length
 
@@ -43,11 +42,11 @@ public class TopologyTable {
         listRIB.add(pathAttributes);
     }
 
-    public void insertNewEntry(String origin, PathSegments[] asPath, String nextHop) {
-        listRIB.add(new PathAttributes(origin, asPath, nextHop));
+    public void insertNewEntry(String origin, PathSegments[] asPath, String nextHop, double trustRate) {
+        listRIB.add(new PathAttributes(origin, asPath, nextHop, trustRate));
     }
 
-    //iserting in the new topology table by using also the NLRI as parameter
+    //inserting in the new topology table by using also the NLRI as parameter
     public void insertEntry(String destIp, PathAttributes pathAttributes) {
         topTable.put(destIp, pathAttributes);
     }
@@ -84,6 +83,11 @@ public class TopologyTable {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public void addTrustToEntryByIp(String ip, PathAttributes attributes) {
+//        PathAttributes old = topTable.replace(ip, attributes);
+//        System.out.println("AAAAAAAAAAAAAAAAAAAA########################" + old.getNEXT_HOP() + " " + old.getTRUSTRATE());
     }
 
 	/*
