@@ -99,6 +99,15 @@ public class Router implements Runnable {
         this.tcpConnectedRouters = new ArrayList<>();
     }
 
+    public BGPRoutingTable getRoutingTable() {
+        return routingTable;
+    }
+
+    //function to insert values inside the routing table based on the neighbor table
+    public void insertFromNeighbour(String destinationIP, String destinationAS, double trust) {
+        neighborTable.addNeighbor(destinationIP, destinationAS, trust);
+    }
+
     public NeighborTable getNeighborTable() {
         return neighborTable;
     }
@@ -113,7 +122,7 @@ public class Router implements Runnable {
             AsciiTable at = new AsciiTable();
             at.addRule();
             at.addRule();
-            at.addRow("ID", "Destination IP", "AS_PATH", "NEXT_HOP", "MULTI_EXIT_DISC", "LOCAL_PREF", "TRUSTRATE");
+            at.addRow("ID", "Destination IP", "AS_PATH", "NEXT_HOP", "TRUSTRATE");
             at.addRule();
             at.addRule();
             int i = 1;
@@ -137,8 +146,7 @@ public class Router implements Runnable {
                 }
 
                 // Adding each row to the table
-                at.addRow(i, entry.getKey(), asPaths.toString(), entry.getValue().getNEXT_HOP(),
-                        entry.getValue().getMULTI_EXIT_DISC(), entry.getValue().getLOCAL_PREF(), entry.getValue().getTRUSTRATE());
+                at.addRow(i, entry.getKey(), asPaths.toString(), entry.getValue().getNEXT_HOP(), entry.getValue().getTRUSTRATE());
                 at.addRule();
                 i++;
             }
