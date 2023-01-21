@@ -252,62 +252,51 @@ public class DoTest {
 
         Thread.sleep(25000);
 
-        AtomicInteger leonardo = new AtomicInteger();
+        // Send update messages to neighbors
+        AtomicInteger counter = new AtomicInteger();
         linkMap.entrySet().parallelStream().forEach(entry -> {
-            if (leonardo.get() == 0) { // send just one update pkt per router
+            // send just one update pkt per router
+            if (counter.get() == 0) {
                 //for each router take their neighbor table and send update message to all neighbors
                 for (Router r : routers) {
                     sendUpdateMessage(r, (String) entry.getValue());
-                    leonardo.getAndIncrement();
+                    counter.getAndIncrement();
                 }
             }
         });
 
+        Thread.sleep(15000);
 
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            double votingCoefficient = 0;
+            double directTrust = 0;
+            double totalTrust;
+            Router r1 = Router.getRouterByIP(entry.getKey());
+            Router r2 = Router.getRouterByIP((String) entry.getValue());
 
+            NeighborTable tmpNeighborTable = r2.getNeighborTable();
+            //get all the IP addresses of the neighbors
+            ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
 
+            // calculate voting coefficient from neighbors (1/T1 + 1/T2 + ...)
+            for (String ip : neighborIPs) {
+                if(!ip.equals(entry.getKey())) {
+                    votingCoefficient += 1 / tmpNeighborTable.getNeighborTrustByIp(ip);
+                } else {
+                    directTrust = tmpNeighborTable.getNeighborTrustByIp(ip);
+                }
+            }
 
+            /*
+             * calculate recommendation coefficient by formula (1 + votingCoefficient) * 1/directTrust, as described in
+             * HYBRID TRUST MODEL FOR INTERNET ROUTING (Pekka Rantala, Seppo Virtanen and Jouni Isoaho)
+             */
+            totalTrust = (1 + votingCoefficient) * (1 / directTrust);
 
+            SendTrustExchangeMessage task = new SendTrustExchangeMessage(entry.getKey(), (String) entry.getValue(), totalTrust);
+            ThreadPool.submit(task);
 
-
-
-
-
-
-
-//        Thread.sleep(15000);
-//
-//
-//        linkMap.entrySet().parallelStream().forEach(entry -> {
-//            double votingCoefficient = 0;
-//            double directTrust = 0;
-//            double totalTrust;
-//            Router r1 = Router.getRouterByIP(entry.getKey());
-//            Router r2 = Router.getRouterByIP((String) entry.getValue());
-//
-//            NeighborTable tmpNeighborTable = r2.getNeighborTable();
-//            //get all the IP addresses of the neighbors
-//            ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
-//
-//            // calculate voting coefficient from neighbors (1/T1 + 1/T2 + ...)
-//            for (String ip : neighborIPs) {
-//                if(!ip.equals(entry.getKey())) {
-//                    votingCoefficient += 1 / tmpNeighborTable.getNeighborTrustByIp(ip);
-//                } else {
-//                    directTrust = tmpNeighborTable.getNeighborTrustByIp(ip);
-//                }
-//            }
-//
-//            /*
-//             * calculate recommendation coefficient by formula (1 + votingCoefficient) * 1/directTrust, as described in
-//             * HYBRID TRUST MODEL FOR INTERNET ROUTING (Pekka Rantala, Seppo Virtanen and Jouni Isoaho)
-//             */
-//            totalTrust = (1 + votingCoefficient) * (1 / directTrust);
-//
-//            SendTrustExchangeMessage task = new SendTrustExchangeMessage(entry.getKey(), (String) entry.getValue(), totalTrust);
-//            ThreadPool.submit(task);
-//
-//        });
+        });
 
 
         // BLOCK CUSTOMIZE TABLE

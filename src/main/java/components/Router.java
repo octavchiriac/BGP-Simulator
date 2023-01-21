@@ -116,6 +116,10 @@ public class Router implements Runnable {
         return routingTable.updateTable(topologyTable);
     }
 
+    public boolean updateBGPRoutingTable(TopologyTable topologyTable) {
+        return routingTable.updateTable(topologyTable);
+    }
+
     public void printRoutingTable() {
         synchronized (Globals.lock) {
             System.out.println("[" + name + "] BGP Routing table: ");

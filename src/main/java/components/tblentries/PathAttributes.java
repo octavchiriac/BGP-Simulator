@@ -43,8 +43,9 @@ public class PathAttributes {
         }
         return "PathAttributes{" +
                 "ORIGIN='" + ORIGIN + '\'' +
-                ", AS_PATH=[" + stringedAsPath.toString() + "]" +
+                ", AS_PATH=[" + stringedAsPath + "]" +
                 ", NEXT_HOP='" + NEXT_HOP + '\'' +
+                ", TRUST_RATE='" + TRUSTRATE + '\'' +
                 ", MULTI_EXIT_DISC='" + MULTI_EXIT_DISC + '\'' +
                 ", LOCAL_PREF='" + LOCAL_PREF + '\'' +
                 ", ATOMIC_AGGREGATE='" + ATOMIC_AGGREGATE + '\'' +
@@ -80,10 +81,6 @@ public class PathAttributes {
         AS_PATH = newPathSegments;
     }
 
-    public String getORIGIN() {
-        return ORIGIN;
-    }
-
     public PathSegments[] getAS_PATH() {
         return AS_PATH;
     }
@@ -96,39 +93,18 @@ public class PathAttributes {
         this.NEXT_HOP = NEXT_HOP;
     }
 
-    public String getMULTI_EXIT_DISC() {
-        return MULTI_EXIT_DISC;
-    }
-
-    public String getLOCAL_PREF() {
-        return LOCAL_PREF;
-    }
-
-    public String getATOMIC_AGGREGATE() {
-        return ATOMIC_AGGREGATE;
-    }
-
-    public String getAGGREGATOR() {
-        return AGGREGATOR;
-    }
     public double getTRUSTRATE() { return TRUSTRATE; }
+
     public void setTRUSTRATE(double TRUSTRATE) {
         this.TRUSTRATE = TRUSTRATE;
     }
+
+    public String getORIGIN() {
+        return ORIGIN;
+    }
+
     public void setMULTI_EXIT_DISC(String MULTI_EXIT_DISC) {
         this.MULTI_EXIT_DISC = MULTI_EXIT_DISC;
-    }
-
-    public void setLOCAL_PREF(String LOCAL_PREF) {
-        this.LOCAL_PREF = LOCAL_PREF;
-    }
-
-    public void setATOMIC_AGGREGATE(String ATOMIC_AGGREGATE) {
-        this.ATOMIC_AGGREGATE = ATOMIC_AGGREGATE;
-    }
-
-    public void setAGGREGATOR(String AGGREGATOR) {
-        this.AGGREGATOR = AGGREGATOR;
     }
 
     public String packetToBitArray() {

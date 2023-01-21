@@ -30,43 +30,16 @@ public class BGPRoutingTable {
         * The best path can be changed also based on the policies (like shortest path, lowest cost, etc)
      */
     public boolean updateTable(TopologyTable topologyTable) {
-        /*
-        ArrayList<PathAttributes> listRIB = topologyTable.getListRIB();
-        boolean changed= false;
-        System.out.println("Updating BGP Routing Table...");
-        topologyTable.printTable();
-        System.out.println(this.toString());
-
-        for (PathAttributes entry : listRIB) {
-            String tmpNextHop = entry.getNEXT_HOP();
-            PathSegments[] tmpPath= entry.getAS_PATH();
-            for (PathSegments pathSegment : tmpPath) {
-                String tmpDestinationIp = pathSegment.getDestinationIp();
-                //list of IPs
-                String[] tmpPathSegmentValue = pathSegment.getPathSegmentValue();
-                //if the destination ip is already inside, check if the bestpath is good
-                if (bestRoutes.get(tmpDestinationIp) != null) {
-                    //if the best path is shorter (in terms of array size) than the one already in, update the best path
-                    if (bestRoutes.get(tmpDestinationIp).length > tmpPathSegmentValue.length) {
-                        bestRoutes.put(tmpDestinationIp, tmpPathSegmentValue);
-                        changed = true;
-                    }
-                }
-            }
-        }
-         */
         Map<String,PathAttributes> topTable = topologyTable.getTopTable();
         boolean changed= false;
         System.out.println("Updating BGP Routing Table...");
-        //topologyTable.printTable();
-        //System.out.println(this.toString());
 
         for (Map.Entry<String, PathAttributes> entry : topTable.entrySet()) {
             String destIP = entry.getKey();
 
             if(bestRoutes.get(destIP) != null){
                 // Compares existing table entry with the new one, deciding the best based on some criteria
-                PathAttributes res = chooseBestEntry(bestRoutes.get(destIP), entry.getValue(), changed);
+                PathAttributes res = chooseBestEntry(bestRoutes.get(destIP), entry.getValue());
                 if (res != null) {
                     bestRoutes.put(destIP, res);
                 }
@@ -81,14 +54,31 @@ public class BGPRoutingTable {
         return changed;
     }
 
-    public PathAttributes chooseBestEntry(PathAttributes oldEntry, PathAttributes newEntry, boolean changed){
-        PathAttributes res = newEntry;
-        //TODO: ADD THE DECIDING ALGORITHM BASED ON THE POLICIES WE CHOOSE
-        // for now we just implement the shortest AS path
-        if(oldEntry.getAS_PATH().length <= newEntry.getAS_PATH().length){
-            res = oldEntry;
-            changed = true;
+    public PathAttributes chooseBestEntry(PathAttributes oldEntry, PathAttributes newEntry){
+
+        int oldEntryScore = 0;
+        int newEntryScore = 0;
+
+        PathAttributes res;
+
+        if (oldEntry.getAS_PATH().length <= newEntry.getAS_PATH().length){
+            oldEntryScore += 5;
+        } else {
+            newEntryScore += 5;
         }
+
+        if (oldEntry.getTRUSTRATE() > newEntry.getTRUSTRATE()) {
+            oldEntryScore += oldEntry.getTRUSTRATE();
+        } else {
+            newEntryScore += newEntry.getTRUSTRATE();
+        }
+
+        if (oldEntryScore > newEntryScore) {
+            res = oldEntry;
+        } else {
+            res = newEntry;
+        }
+
         return res;
     }
 
