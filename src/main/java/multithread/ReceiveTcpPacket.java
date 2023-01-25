@@ -87,13 +87,35 @@ public class ReceiveTcpPacket implements Runnable {
                 }
 
                 // Receiving NOTIFICATION packet
-                else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(5) == '1' && tcpPacket2.getData().charAt(6) == '1') {
+                else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(6) == '1' && tcpPacket2.getData().charAt(7) == '1') {
                     System.out.println("[" + srcRouterName + " -> " + destRouterName + "] NOTIFICATION packet successfully received on interface " + interfaceName);
 
                     // Change BGP state to OpenConfirm
                     assert destInt != null;
                     destInt.setState(BGPStates.Connect);
                     System.out.println("\033[0;35m" + "[" + dest.getName() + " - " + destInt.getName() + "] BGP state : Connect" + "\033[0m");
+                }
+
+                // Receiving TRUSTLIST packet
+                else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(5) == '1' && tcpPacket2.getData().charAt(6) == '1') {
+                    System.out.println("[" + srcRouterName + " -> " + destRouterName + "] TRUSTLIST packet successfully received on interface " + interfaceName);
+
+                    TrustListMessagePacket bgpPacket;
+                    try {
+                        String stringedPkt = tcpPacket2.getData().substring(8); // remove the header of first 8 bits
+                        bgpPacket = new TrustListMessagePacket(stringedPkt);
+                    } catch (Exception e) {
+                        throw new Exception("[" + srcRouterName + " -> " + destRouterName + "] " + "Error in parsing the UPDATE packet - " + e.getMessage());
+                    }
+
+                    if (bgpPacket.getTrustList() != null) {
+                        for (Map.Entry<Integer, String> entry : bgpPacket.getTrustList().entrySet()) {
+                            this.updateRoutingTableTrusts(sourceIpAddress, entry.getValue(),
+                                    (double) entry.getKey() / 1000);
+                            this.updateRoutingTableTrusts(entry.getValue(), sourceIpAddress,
+                                    (double) entry.getKey() / 1000);
+                        }
+                    }
                 }
 
                 // Receiving TRUSTRATE packet
@@ -125,6 +147,7 @@ public class ReceiveTcpPacket implements Runnable {
 
                 // Receiving UPDATE packet
                 else if (tcpPacket2.isPsh() && tcpPacket2.isAck() && tcpPacket2.getData().charAt(6) == '1') {
+
                     List<Boolean> isUpdated;
                     // check dest router state, if =/= Established, drop packet
                     if (destInt != null && destInt.getState() != BGPStates.Established) {
@@ -195,7 +218,6 @@ public class ReceiveTcpPacket implements Runnable {
 
                 }
 
-
                 // Receiving SYN + ACK packet
                 else if (tcpPacket2.isSyn() && tcpPacket2.isAck()) {
                     System.out.println("[" + srcRouterName + " -> " + destRouterName + "] SYN + ACK packet sucessfully received on interface " + interfaceName);
@@ -226,7 +248,7 @@ public class ReceiveTcpPacket implements Runnable {
         }
     }
 
-    public void updateRoutingTableTrusts(String srcIp, String destIp, double trust) {
+    private void updateRoutingTableTrusts(String srcIp, String destIp, double trust) {
 
         Router r = Router.getRouterByIP(srcIp);
         assert r != null;
@@ -245,11 +267,8 @@ public class ReceiveTcpPacket implements Runnable {
 
             r.setTopologyTable(topologyTable);
 
-//        update the BGP routing table
-//        if something changed, return true
             r.updateBGPRoutingTable(topologyTable);
 
-            r.printTopologyTable();
             r.printRoutingTable();
             System.out.println("\n\n");
         }

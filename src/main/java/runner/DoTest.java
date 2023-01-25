@@ -174,15 +174,14 @@ public class DoTest {
             System.out.println("Sending update message from " + sourceIP);
 
             // filling lists with random data
-
-            Map<Integer, String> WithdrawnRoute = null;
+            Map<Integer, String> WithdrawnRoute;
             for (int i = 2; i < 3; i++) {
                 WithdrawnRoute = new HashMap<>();
                 WithdrawnRoute.put(i, "100.0.0." + i);
                 WithdrawnRoutes.add(WithdrawnRoute);
             }
 
-            Map<Integer, String> NetworkLayerReachabilityInfo = null;
+            Map<Integer, String> NetworkLayerReachabilityInfo;
             // get the IP addresses of the neighbors and put it in the NLRI
             for (int i = 0; i < neighborIPs.size(); i++) {
                 NetworkLayerReachabilityInfo = new HashMap<>();
@@ -193,7 +192,55 @@ public class DoTest {
             // creating path attributes for AS_PATH field
             String[] pathSegmentsVal = new String[1];
             pathSegmentsVal[0] = sourceIP;
-            PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal); // destinationIp parameter is wrong and not used, but it is required
+            PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal);
+            PathSegments[] psList = new PathSegments[1];
+            psList[0] = ps;
+
+            pathAttributes = new PathAttributes("1", psList, sourceIP, 0);
+
+            SendUpdateMessage task = new SendUpdateMessage(sourceIP, destinationIp, WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
+            ThreadPool.submit(task);
+        }
+    }
+
+    private static void exchangeTrustBetweenRouters(Router r, String destinationIp) {
+        //get all the interfaces for the router
+        ArrayList<RouterInterface> interfaces = r.getInterfaces();
+        //send the update for each interface of the selected router
+        for (RouterInterface in : interfaces) {
+            NeighborTable tmpNeighborTable = r.getNeighborTable();
+            //get all the IP addresses of the neighbors
+            ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
+
+            List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
+            List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
+            PathAttributes pathAttributes;
+
+            //get the IP address of the interface and use it as source IP
+            String sourceIP = in.getIpAddress();
+
+            System.out.println("Sending update message from " + sourceIP);
+
+            // filling lists with random data
+            Map<Integer, String> WithdrawnRoute;
+            for (int i = 2; i < 3; i++) {
+                WithdrawnRoute = new HashMap<>();
+                WithdrawnRoute.put(i, "100.0.0." + i);
+                WithdrawnRoutes.add(WithdrawnRoute);
+            }
+
+            Map<Integer, String> NetworkLayerReachabilityInfo;
+            // get the IP addresses of the neighbors and put it in the NLRI
+            for (int i = 0; i < neighborIPs.size(); i++) {
+                NetworkLayerReachabilityInfo = new HashMap<>();
+                NetworkLayerReachabilityInfo.put(i, neighborIPs.get(i));
+                NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
+            }
+
+            // creating path attributes for AS_PATH field
+            String[] pathSegmentsVal = new String[1];
+            pathSegmentsVal[0] = sourceIP;
+            PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal);
             PathSegments[] psList = new PathSegments[1];
             psList[0] = ps;
 
@@ -267,6 +314,7 @@ public class DoTest {
 
         Thread.sleep(15000);
 
+        // Calculate direct trust between routers and exchange
         linkMap.entrySet().parallelStream().forEach(entry -> {
             double votingCoefficient = 0;
             double directTrust = 0;
@@ -295,7 +343,27 @@ public class DoTest {
 
             SendTrustExchangeMessage task = new SendTrustExchangeMessage(entry.getKey(), (String) entry.getValue(), totalTrust);
             ThreadPool.submit(task);
+        });
 
+        Thread.sleep(10000);
+
+        // Exchange trust information between neighbors using WithdrawnRoutes parameter
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            Router r1 = Router.getRouterByIP(entry.getKey());
+            Map<Integer, String> trustMap = new HashMap<>();
+
+            for (Map.Entry<String, PathAttributes> row : r1.getRoutingTable().getBestRoutes().entrySet()) {
+
+                //convert trust to integer, so it can use the same format
+                int trustInt = (int) (row.getValue().getTRUSTRATE() * 1000);
+
+                if (trustInt != 0) {
+                    trustMap.put(trustInt, row.getKey());
+                }
+            }
+
+            SendTrustListMessage task = new SendTrustListMessage(entry.getKey(), (String) entry.getValue(), trustMap);
+            ThreadPool.submit(task);
         });
 
 

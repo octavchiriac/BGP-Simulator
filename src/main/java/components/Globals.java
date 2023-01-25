@@ -15,6 +15,6 @@ public class Globals {
 	public static Map<String, Object> linkMap;
 	public static int BGP_VERSION = 4;
 	public static int HOLD_TIMER = 20000;
-	public static int NOTIFICATION_DISCONNECT = 6;
+	public static int NOTIFICATION_DISCONNECT = 3;
 	public static final Object lock = new Object();
 }
