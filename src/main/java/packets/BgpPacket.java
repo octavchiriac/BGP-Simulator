@@ -34,16 +34,8 @@ public class BgpPacket extends Packet{
 		return bitsArray;
 	}
 
-	public int getVersion() {
-		return version;
-	}
-
 	public int getAs() {
 		return as;
-	}
-
-	public int getHoldTime() {
-		return holdTime;
 	}
 
 	@Override

@@ -2,7 +2,6 @@ package multithread;
 
 import components.Globals;
 import components.Router;
-import components.RouterInterface;
 import packets.HdlcPacket;
 import packets.IpPacket;
 import packets.Packet;
@@ -83,8 +82,12 @@ public class SendTcpPacket implements Runnable{
 
 		if (isPsh && isAck && data.length() == 0) {
 			packetType = "KEEPALIVE";
-		} else if(isPsh && isAck && data.charAt(5) == '1' && data.charAt(6) == '1') {
+		} else if(isPsh && isAck && data.charAt(6) == '1' && data.charAt(7) == '1') {
 			packetType = "NOTIFICATION";
+		} else if(isPsh && isAck && data.charAt(5) == '1' && data.charAt(7) == '1') {
+			packetType = "TRUSTRATE";
+		} else if(isPsh && isAck && data.charAt(5) == '1' && data.charAt(6) == '1') {
+			packetType = "TRUSTLIST";
 		} else if (isPsh && isAck && data.charAt(5) == '1') {
 			packetType = "OPEN";
 		} else if (isPsh && isAck && data.charAt(6) == '1') {

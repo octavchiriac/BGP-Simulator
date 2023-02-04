@@ -1,11 +1,8 @@
 package components.tblentries;
 
 import utils.BinaryFunctions;
-import utils.ObjectSizeFetcher;
 
 import java.net.Inet4Address;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class PathAttributes {
 
@@ -16,21 +13,13 @@ public class PathAttributes {
     private String LOCAL_PREF = "";
     private String ATOMIC_AGGREGATE = "";
     private String AGGREGATOR = "";
+    private double TRUSTRATE = 0;
 
-    public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP) {
+    public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP, double TRUSTRATE) {
         this.ORIGIN = ORIGIN; // IGP, EGP, INCOMPLETE -- 0, 1, 2 --> should be always 1
         this.AS_PATH = AS_PATH;
         this.NEXT_HOP = NEXT_HOP;
-    }
-
-    public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP, String MULTI_EXIT_DISC, String LOCAL_PREF, String ATOMIC_AGGREGATE, String AGGREGATOR) {
-        this.ORIGIN = ORIGIN;
-        this.AS_PATH = AS_PATH;
-        this.NEXT_HOP = NEXT_HOP;
-        this.MULTI_EXIT_DISC = MULTI_EXIT_DISC;
-        this.LOCAL_PREF = LOCAL_PREF;
-        this.ATOMIC_AGGREGATE = ATOMIC_AGGREGATE;
-        this.AGGREGATOR = AGGREGATOR;
+        this.TRUSTRATE = TRUSTRATE;
     }
 
     @Override
@@ -41,8 +30,9 @@ public class PathAttributes {
         }
         return "PathAttributes{" +
                 "ORIGIN='" + ORIGIN + '\'' +
-                ", AS_PATH=[" + stringedAsPath.toString() + "]" +
+                ", AS_PATH=[" + stringedAsPath + "]" +
                 ", NEXT_HOP='" + NEXT_HOP + '\'' +
+                ", TRUST_RATE='" + TRUSTRATE + '\'' +
                 ", MULTI_EXIT_DISC='" + MULTI_EXIT_DISC + '\'' +
                 ", LOCAL_PREF='" + LOCAL_PREF + '\'' +
                 ", ATOMIC_AGGREGATE='" + ATOMIC_AGGREGATE + '\'' +
@@ -78,10 +68,6 @@ public class PathAttributes {
         AS_PATH = newPathSegments;
     }
 
-    public String getORIGIN() {
-        return ORIGIN;
-    }
-
     public PathSegments[] getAS_PATH() {
         return AS_PATH;
     }
@@ -94,36 +80,10 @@ public class PathAttributes {
         this.NEXT_HOP = NEXT_HOP;
     }
 
-    public String getMULTI_EXIT_DISC() {
-        return MULTI_EXIT_DISC;
-    }
+    public double getTRUSTRATE() { return TRUSTRATE; }
 
-    public String getLOCAL_PREF() {
-        return LOCAL_PREF;
-    }
-
-    public String getATOMIC_AGGREGATE() {
-        return ATOMIC_AGGREGATE;
-    }
-
-    public String getAGGREGATOR() {
-        return AGGREGATOR;
-    }
-
-    public void setMULTI_EXIT_DISC(String MULTI_EXIT_DISC) {
-        this.MULTI_EXIT_DISC = MULTI_EXIT_DISC;
-    }
-
-    public void setLOCAL_PREF(String LOCAL_PREF) {
-        this.LOCAL_PREF = LOCAL_PREF;
-    }
-
-    public void setATOMIC_AGGREGATE(String ATOMIC_AGGREGATE) {
-        this.ATOMIC_AGGREGATE = ATOMIC_AGGREGATE;
-    }
-
-    public void setAGGREGATOR(String AGGREGATOR) {
-        this.AGGREGATOR = AGGREGATOR;
+    public String getORIGIN() {
+        return ORIGIN;
     }
 
     public String packetToBitArray() {

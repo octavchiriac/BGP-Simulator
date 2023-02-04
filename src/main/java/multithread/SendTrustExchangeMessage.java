@@ -2,17 +2,20 @@ package multithread;
 
 import components.Globals;
 import components.Router;
-import packets.BgpPacket;
+import packets.TrustMessagePacket;
 
-import static components.Globals.*;
+import static components.Globals.BGP_VERSION;
 
-public class SendNotificationMessage implements Runnable{
-    String source;
-    String destination;
+public class SendTrustExchangeMessage implements Runnable {
 
-    public SendNotificationMessage(String source, String destination) {
+    private String source;
+    private String destination;
+    private double totalTrust;
+
+    public SendTrustExchangeMessage(String source, String destination, double totalTrust) {
         this.source = source;
         this.destination = destination;
+        this.totalTrust = totalTrust;
     }
 
     @Override
@@ -23,7 +26,7 @@ public class SendNotificationMessage implements Runnable{
         Router r2 = Router.getRouterByIP(this.destination);
         assert r2 != null;
 
-        BgpPacket packet1 = new BgpPacket(NOTIFICATION_DISCONNECT, 0, 0, 0);
+        TrustMessagePacket packet1 = new TrustMessagePacket(BGP_VERSION, 0,0,0, this.totalTrust);
         String bitArrayBgp1 = packet1.packetToBitArray();
 
         if (r1.getTcpConnectedRouters().contains(r2)) {

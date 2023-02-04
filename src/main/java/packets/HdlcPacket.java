@@ -1,7 +1,6 @@
 package packets;
 
 public class HdlcPacket extends Packet{
-
 	private String flag;
 	private String address;
 	private String control;

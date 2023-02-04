@@ -14,11 +14,12 @@ import components.Globals;
 import components.Router;
 import components.RouterInterface;
 
+import static components.Globals.fullMap;
 import static components.Globals.linkMap;
 
 public class ParseInputFile {
 
-	static String FILENAME = "inputs.json";
+	static String FILENAME = "inputsLong.json";
 	static String content;
 
 	public void parseRouterInterfaces() throws IOException {
@@ -55,7 +56,10 @@ public class ParseInputFile {
 		JSONObject obj = new JSONObject(content);
 		JSONObject links = obj.getJSONObject("links");
 		linkMap = links.toMap();
-		Map<Object, String> reverseLinkMap = IpFunctions.reverseMap(linkMap);
+		Map<String, String> reverseLinkMap = IpFunctions.reverseMap(linkMap);
+
+		fullMap = links.toMap();
+		fullMap.putAll(reverseLinkMap);
 
 		for(Router r : Globals.routers) {
 			for(RouterInterface i : r.getInterfaces()) {

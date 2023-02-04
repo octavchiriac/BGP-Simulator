@@ -2,7 +2,6 @@ package runner;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import components.*;
@@ -13,8 +12,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import utils.IpFunctions;
 import utils.ParseInputFile;
 
-import static components.Globals.linkMap;
-import static components.Globals.routers;
+import static components.Globals.*;
 import static components.Router.getRouterByIP;
 
 public class DoTest {
@@ -94,73 +92,64 @@ public class DoTest {
         return changedRouter;
     }
 
-    /* It is more difficult to do more modifications...will try later if we have time
-     * Insert following lines to use and verify method
+    /* Insert following lines to use and verify method
      *  Router changedRouter = addEntryInRoutingTable();
      *  changedRouter.getTopologyTable().printTable();
      */
-    private static void customizeRoutingTable() throws InterruptedException {
-        boolean wrongInput = true;
+    private static Router customizeRoutingTable() throws InterruptedException {
         Router changedRouter = null;
         Scanner input = new Scanner(System.in);
 
         System.out.println("Enter router name followed by desired entry " +
                 "<DESTINATION_IP AS1,AS2,..ASn NEXT_HOP> : ");
 
-        while (wrongInput) {
-            String line = input.nextLine();
-            if (line.equals("exit")) {
-                wrongInput = false;
-            } else {
-                synchronized (Globals.lock) {
-                    String routerName = "";
-                    String tableEntry = "";
-                    try {
-                        routerName = line.substring(0, line.indexOf(" "));
-                        tableEntry = line.substring(line.indexOf(" ") + 1);
-                    } catch (Exception e) {
-                        System.err.println("Wrong input format. Please try again or type \"exit\" to skip");
-                    }
-
-                    if (Globals.routerNames.contains(routerName)) {
-                        Router r = Router.getRouterByName(routerName);
-                        changedRouter = r;
-
-                        String destinationIp = tableEntry.split(" ")[0];
-                        String asList = tableEntry.split(" ")[1];
-                        String nextHop = tableEntry.split(" ")[2];
-                        String[] asArray = asList.split(",");
-
-                        String[] asIpArray = new String[asArray.length];
-                        for (int i = 0; i < asArray.length; i++) {
-                            asIpArray[i] = IpFunctions.getIpFromAs(asArray[i]);
-                        }
-
-                        System.out.println("destinationIp: " + destinationIp + " asList: " + asList + " nextHop: " + nextHop + " asIpArray: " + Arrays.toString(asIpArray));
-
-                        BGPRoutingTable topologyTable = r.getRoutingTable();
-
-                        topologyTable.insertNewEntry(destinationIp, "0.0.0.0",
-                                ArrayUtils.toArray(new PathSegments(destinationIp, asIpArray)), nextHop);
-                        System.out.println("Entry added to routing table of " + r.getName());
-                        r.printRoutingTable();
-                        Thread.sleep(1000);
-                        System.out.println("Propagating new information to neighbors...");
-                        // Propagate new information to neighbors of this router
-                        r.getNeighborTable().getNeighborInfo().forEach((key, value) -> {
-                            System.out.println("[" + r.getName() + " -> " + key + "] Forwarding custom UPDATE to neighbor " + key + " @ " + Objects.requireNonNull(getRouterByIP(key)).getName());
-                            sendUpdateMessage(r, key);
-                        });
-                    }
-                }
+        String line = input.nextLine();
+        synchronized (Globals.lock) {
+            String routerName = "";
+            String tableEntry = "";
+            try {
+                routerName = line.substring(0, line.indexOf(" "));
+                tableEntry = line.substring(line.indexOf(" ") + 1);
+            } catch (Exception e) {
+                System.err.println("Wrong input format. Please try again or type \"exit\" to skip");
             }
 
-            if (wrongInput) {
-                System.err.println("No router found with this name. Please try again or type \"exit\" to skip");
-            } else {
-                System.out.println("Route added and information propagated!");
+            if (Globals.routerNames.contains(routerName)) {
+                Router r = Router.getRouterByName(routerName);
+                changedRouter = r;
+
+                String destinationIp = tableEntry.split(" ")[0];
+                String asList = tableEntry.split(" ")[1];
+                String nextHop = tableEntry.split(" ")[2];
+                String[] asArray = asList.split(",");
+
+                String[] asIpArray = new String[asArray.length];
+                for (int i = 0; i < asArray.length; i++) {
+                    asIpArray[i] = IpFunctions.getIpFromAs(asArray[i]);
+                }
+
+                System.out.println("destinationIp: " + destinationIp + " asList: " + asList + " nextHop: " + nextHop + " asIpArray: " + Arrays.toString(asIpArray));
+
+                BGPRoutingTable topologyTable = r.getRoutingTable();
+
+                topologyTable.insertNewEntry(destinationIp, "0.0.0.0",
+                        ArrayUtils.toArray(new PathSegments(destinationIp, asIpArray)), nextHop, 0);
+                System.out.println("Entry added to routing table of " + r.getName());
+                Thread.sleep(1000);
+                System.out.println("Propagating new information to neighbors...");
+                // Propagate new information to neighbors of this router
+                r.getNeighborTable().getNeighborInfo().forEach(key -> {
+                    System.out.println("[" + r.getName() + " -> " + key.getIp() +
+                            "] Forwarding custom UPDATE to neighbor " + key.getIp()
+                            + " @ " + Objects.requireNonNull(getRouterByIP(key.getIp())).getName());
+                    sendUpdateMessage(r, key.getIp());
+                });
             }
         }
+
+        System.out.println("Route added and information propagated!");
+
+        return changedRouter;
     }
 
     private static void sendUpdateMessage(Router r, String destinationIp) {
@@ -172,27 +161,24 @@ public class DoTest {
             //get all the IP addresses of the neighbors
             ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
 
-            //RouterInterface in = interfaces.get(0); //only one interface for now
-
             List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
             List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
             PathAttributes pathAttributes;
 
-            //String sourceIP = "10.0.0.1";
-            String sourceIP = in.getIpAddress();    //get the IP address of the interface and use it as source IP
+            //get the IP address of the interface and use it as source IP
+            String sourceIP = in.getIpAddress();
 
-            System.out.println("Sending update message from " + sourceIP);
+//            System.out.println("\033[0;32m" + "[INFO] Sending update message from " + sourceIP + "\033[0m");
 
             // filling lists with random data
-
-            Map<Integer, String> WithdrawnRoute = null;
+            Map<Integer, String> WithdrawnRoute;
             for (int i = 2; i < 3; i++) {
                 WithdrawnRoute = new HashMap<>();
                 WithdrawnRoute.put(i, "100.0.0." + i);
                 WithdrawnRoutes.add(WithdrawnRoute);
             }
 
-            Map<Integer, String> NetworkLayerReachabilityInfo = null;
+            Map<Integer, String> NetworkLayerReachabilityInfo;
             // get the IP addresses of the neighbors and put it in the NLRI
             for (int i = 0; i < neighborIPs.size(); i++) {
                 NetworkLayerReachabilityInfo = new HashMap<>();
@@ -203,18 +189,66 @@ public class DoTest {
             // creating path attributes for AS_PATH field
             String[] pathSegmentsVal = new String[1];
             pathSegmentsVal[0] = sourceIP;
-            PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal); // destinationIp parameter is wrong and not used, but it is required
+            PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal);
             PathSegments[] psList = new PathSegments[1];
             psList[0] = ps;
 
-            pathAttributes = new PathAttributes("1", psList, sourceIP);
+            pathAttributes = new PathAttributes("1", psList, sourceIP, 0);
 
             SendUpdateMessage task = new SendUpdateMessage(sourceIP, destinationIp, WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
             ThreadPool.submit(task);
         }
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    private static void exchangeTrustBetweenRouters(Router r, String destinationIp) {
+        //get all the interfaces for the router
+        ArrayList<RouterInterface> interfaces = r.getInterfaces();
+        //send the update for each interface of the selected router
+        for (RouterInterface in : interfaces) {
+            NeighborTable tmpNeighborTable = r.getNeighborTable();
+            //get all the IP addresses of the neighbors
+            ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
+
+            List<Map<Integer, String>> WithdrawnRoutes = new ArrayList<>();
+            List<Map<Integer, String>> NetworkLayerReachabilityInformation = new ArrayList<>();
+            PathAttributes pathAttributes;
+
+            //get the IP address of the interface and use it as source IP
+            String sourceIP = in.getIpAddress();
+
+            System.out.println("Sending update message from " + sourceIP);
+
+            // filling lists with random data
+            Map<Integer, String> WithdrawnRoute;
+            for (int i = 2; i < 3; i++) {
+                WithdrawnRoute = new HashMap<>();
+                WithdrawnRoute.put(i, "100.0.0." + i);
+                WithdrawnRoutes.add(WithdrawnRoute);
+            }
+
+            Map<Integer, String> NetworkLayerReachabilityInfo;
+            // get the IP addresses of the neighbors and put it in the NLRI
+            for (int i = 0; i < neighborIPs.size(); i++) {
+                NetworkLayerReachabilityInfo = new HashMap<>();
+                NetworkLayerReachabilityInfo.put(i, neighborIPs.get(i));
+                NetworkLayerReachabilityInformation.add(NetworkLayerReachabilityInfo);
+            }
+
+            // creating path attributes for AS_PATH field
+            String[] pathSegmentsVal = new String[1];
+            pathSegmentsVal[0] = sourceIP;
+            PathSegments ps = new PathSegments("0.0.0.0", pathSegmentsVal);
+            PathSegments[] psList = new PathSegments[1];
+            psList[0] = ps;
+
+            pathAttributes = new PathAttributes("1", psList, sourceIP, 0);
+
+            SendUpdateMessage task = new SendUpdateMessage(sourceIP, destinationIp, WithdrawnRoutes, pathAttributes, NetworkLayerReachabilityInformation);
+            ThreadPool.submit(task);
+        }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         // Parse input file
         ParseInputFile parseInput = new ParseInputFile();
@@ -260,30 +294,11 @@ public class DoTest {
             ThreadPool.submit(task);
         });
 
-        Thread.sleep(15000);
-
-        AtomicInteger leonardo = new AtomicInteger();
-        linkMap.entrySet().parallelStream().forEach(entry -> {
-            if (leonardo.get() == 0) { // send just one update pkt per router
-                //for each router take their neighbor table and send update message to all neighbors
-                for (Router r : routers) {
-                    sendUpdateMessage(r, (String) entry.getValue());
-                    leonardo.getAndIncrement();
-                }
-            }
-        });
-
-        Thread.sleep(15000);
-
-        customizeRoutingTable();
-
-
         // Select router to change state
-        /*
-        Thread.sleep(2000);
+        Thread.sleep(20000);
         Router shutdownRouter = changeRouterStateFromInput();
 
-        linkMap.entrySet().parallelStream().forEach(entry -> {
+        fullMap.entrySet().parallelStream().forEach(entry -> {
             if (shutdownRouter.getEnabledInterfacesAddresses().contains(entry.getKey())) {
                 SendNotificationMessage task1 =
                         new SendNotificationMessage(entry.getKey(), (String) entry.getValue());
@@ -294,7 +309,6 @@ public class DoTest {
         // Select router to change state
         Router restartedRouter = changeRouterStateFromInput();
 
-
         if (restartedRouter != null) {
             // Restart router thread
             Thread t = new Thread(restartedRouter);
@@ -303,7 +317,7 @@ public class DoTest {
             Thread.sleep(1000);
 
             // Send RST message to previously connected routers
-            linkMap.entrySet().parallelStream().forEach(entry -> {
+            fullMap.entrySet().parallelStream().forEach(entry -> {
                 if (restartedRouter.getEnabledInterfacesAddresses().contains(entry.getKey())) {
                     SendTcpPacket task1 = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0,
                             entry.getKey(), (String) entry.getValue(), Globals.DESTINATION_MAC_ADDRESS,
@@ -327,10 +341,79 @@ public class DoTest {
                 }
             });
         }
-*/
 
-        // TODO continue here
+        Thread.sleep(30000);
 
-//        ThreadPool.stop();
+        // Send update messages to neighbors
+        AtomicInteger counter = new AtomicInteger();
+        linkMap.entrySet().parallelStream().forEach(entry -> {
+            // send just one update pkt per router
+            if (counter.get() == 0) {
+                //for each router take their neighbor table and send update message to all neighbors
+                for (Router r : routers) {
+                    sendUpdateMessage(r, (String) entry.getValue());
+                    counter.getAndIncrement();
+                }
+            }
+        });
+
+        // Customize routing table
+        Thread.sleep(15000);
+        Router changedRouter = customizeRoutingTable();
+
+        // Print customized routing table
+        Thread.sleep(15000);
+        changedRouter.printRoutingTable();
+
+        // Calculate direct trust between routers and exchange
+        fullMap.entrySet().parallelStream().forEach(entry -> {
+            double votingCoefficient = 0;
+            double directTrust = 0;
+            double totalTrust;
+            Router r2 = Router.getRouterByIP((String) entry.getValue());
+
+            NeighborTable tmpNeighborTable = r2.getNeighborTable();
+            //get all the IP addresses of the neighbors
+            ArrayList<String> neighborIPs = tmpNeighborTable.getNeighborIPs();
+
+            // calculate voting coefficient from neighbors (1/T1 + 1/T2 + ...)
+            for (String ip : neighborIPs) {
+                if(!ip.equals(entry.getKey())) {
+                    votingCoefficient += 1 / tmpNeighborTable.getNeighborTrustByIp(ip);
+                } else {
+                    directTrust = tmpNeighborTable.getNeighborTrustByIp(ip);
+                }
+            }
+
+            /*
+             * calculate recommendation coefficient by formula (1 + votingCoefficient) * 1/directTrust, as described in
+             * HYBRID TRUST MODEL FOR INTERNET ROUTING (Pekka Rantala, Seppo Virtanen and Jouni Isoaho)
+             */
+            totalTrust = (1 + votingCoefficient) * (1 / directTrust);
+
+            SendTrustExchangeMessage task = new SendTrustExchangeMessage(entry.getKey(), (String) entry.getValue(), totalTrust);
+            ThreadPool.submit(task);
+        });
+
+        Thread.sleep(10000);
+
+        // Exchange trust information between neighbors using WithdrawnRoutes parameter
+        fullMap.entrySet().parallelStream().forEach(entry -> {
+            Router r1 = Router.getRouterByIP(entry.getKey());
+            Map<Integer, String> trustMap = new HashMap<>();
+
+            for (Map.Entry<String, PathAttributes> row : r1.getRoutingTable().getBestRoutes().entrySet()) {
+
+                //convert trust to integer, so it can use the same format
+                int trustInt = (int) (row.getValue().getTRUSTRATE() * 1000);
+
+                if (trustInt != 0) {
+                    trustMap.put(trustInt, row.getKey());
+                }
+            }
+
+            SendTrustListMessage task = new SendTrustListMessage(entry.getKey(), (String) entry.getValue(), trustMap);
+            ThreadPool.submit(task);
+        });
     }
 }

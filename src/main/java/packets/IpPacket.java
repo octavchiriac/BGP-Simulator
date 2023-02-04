@@ -85,28 +85,14 @@ public class IpPacket extends Packet{
 	public String getSourceAddress() {
 		return sourceAddress;
 	}
-
 	public String getDestinationAddress() {
 		return destinationAddress;
 	}
-
-	public boolean isDf() {
-		return df;
-	}
-
-	public boolean isMf() {
-		return mf;
-	}
-
 	public int getTimeToLive() {
 		return timeToLive;
 	}
 	public void decreaseTimeToLive() {
 		this.timeToLive--;
-	}
-	
-	public int getHeaderChecksum() {
-		return headerChecksum;
 	}
 
 	@Override

@@ -9,7 +9,7 @@ public final class ThreadPool {
     static ExecutorService executor;
 
     public static void run() {
-        executor = Executors.newCachedThreadPool();
+        executor = Executors.newFixedThreadPool(100);
     }
 
     public static void stop() {
