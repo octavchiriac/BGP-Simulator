@@ -131,6 +131,7 @@ public class ReceiveTcpPacket implements Runnable {
                     }
 
                     double totalTrust = bgpPacket.getTotalTrust();
+
                     this.updateRoutingTableTrusts(sourceIpAddress, destinationIpAddress, totalTrust);
                     this.updateRoutingTableTrusts(destinationIpAddress, sourceIpAddress, totalTrust);
                 }

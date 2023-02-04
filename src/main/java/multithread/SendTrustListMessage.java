@@ -3,9 +3,7 @@ package multithread;
 import components.Globals;
 import components.Router;
 import packets.TrustListMessagePacket;
-import packets.TrustMessagePacket;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static components.Globals.BGP_VERSION;

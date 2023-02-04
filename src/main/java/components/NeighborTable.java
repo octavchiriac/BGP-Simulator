@@ -23,16 +23,6 @@ public class NeighborTable {
 		neighborInfo.add(new NeighborTableEntry(ip, as, trust));
 	}
 
-	public String getNeighborAsByIp(String ip){
-		for (NeighborTableEntry entry : neighborInfo) {
-			if (entry.getIp().equals(ip)) {
-				return entry.getAs();
-			}
-		}
-
-		return null;
-	}
-
 	public double getNeighborTrustByIp(String ip) {
 		for (NeighborTableEntry entry : neighborInfo) {
 			if (entry.getIp().equals(ip)) {

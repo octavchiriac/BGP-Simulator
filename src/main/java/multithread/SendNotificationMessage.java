@@ -2,13 +2,11 @@ package multithread;
 
 import components.Globals;
 import components.Router;
-import components.RouterInterface;
 import packets.BgpPacket;
 
 import static components.Globals.*;
 
 public class SendNotificationMessage implements Runnable{
-
     String source;
     String destination;
 

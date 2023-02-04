@@ -3,7 +3,6 @@ package components;
 import components.tblentries.PathAttributes;
 import components.tblentries.PathSegments;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import static components.Globals.BGP_VERSION;
-import static components.Globals.HOLD_TIMER;
 
 /*
     Major fields of the BGP update message are as follows:

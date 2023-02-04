@@ -2,7 +2,6 @@ package multithread;
 
 import components.Globals;
 import components.Router;
-import components.RouterInterface;
 import packets.HdlcPacket;
 import packets.IpPacket;
 import packets.Packet;

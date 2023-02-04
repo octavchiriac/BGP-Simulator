@@ -2,7 +2,6 @@ package runner;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import components.*;
@@ -93,8 +92,7 @@ public class DoTest {
         return changedRouter;
     }
 
-    /* It is more difficult to do more modifications...will try later if we have time
-     * Insert following lines to use and verify method
+    /* Insert following lines to use and verify method
      *  Router changedRouter = addEntryInRoutingTable();
      *  changedRouter.getTopologyTable().printTable();
      */
@@ -170,7 +168,7 @@ public class DoTest {
             //get the IP address of the interface and use it as source IP
             String sourceIP = in.getIpAddress();
 
-            System.out.println("Sending update message from " + sourceIP);
+//            System.out.println("\033[0;32m" + "[INFO] Sending update message from " + sourceIP + "\033[0m");
 
             // filling lists with random data
             Map<Integer, String> WithdrawnRoute;
@@ -297,7 +295,7 @@ public class DoTest {
         });
 
         // Select router to change state
-        Thread.sleep(2000);
+        Thread.sleep(20000);
         Router shutdownRouter = changeRouterStateFromInput();
 
         fullMap.entrySet().parallelStream().forEach(entry -> {

@@ -3,7 +3,6 @@ package components.tblentries;
 import utils.BinaryFunctions;
 
 import java.net.Inet4Address;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class PathSegments {
@@ -21,8 +20,6 @@ public class PathSegments {
     }
 
     public PathSegments(String bitsArray) {
-        int pathSegmentValueSize = bitsArray.length() - 32;
-        String stringedPathSegmentValue;
 
         String[] input = bitsArray.split("/");
         this.destinationIp = (String) BinaryFunctions.bitsArrayToObject(input[0], 0, 32, Inet4Address.class);
@@ -49,13 +46,7 @@ public class PathSegments {
         return bitArrayString;
     }
 
-    public String getDestinationIp() {
-        return destinationIp;
-    }
-
     public String[] getPathSegmentValue() {
         return pathSegmentValue;
     }
-
-
 }

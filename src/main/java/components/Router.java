@@ -50,10 +50,6 @@ public class Router implements Runnable {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public ArrayList<RouterInterface> getInterfaces() {
         return interfaces;
     }
@@ -64,10 +60,6 @@ public class Router implements Runnable {
 
     public boolean isEnabled() {
         return isEnabled;
-    }
-
-    public boolean isRestarted() {
-        return isRestarted;
     }
 
     public void setEnabled(boolean isEnabled) throws InterruptedException {

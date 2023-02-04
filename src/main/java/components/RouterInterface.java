@@ -26,10 +26,6 @@ public class RouterInterface {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public BGPStates getState() {
 		return state;
 	}
@@ -38,21 +34,12 @@ public class RouterInterface {
 		this.state = state;
 	}
 
-
 	public String getIpAddress() {
 		return ipAddress;
 	}
 
-	public void setIpAddress(String ipAddress) {
-		this.ipAddress = ipAddress;
-	}
-
 	public String getSubnetMask() {
 		return subnetMask;
-	}
-
-	public void setSubnetMask(String subnetMask) {
-		this.subnetMask = subnetMask;
 	}
 
 	public String getDirectLink() {
@@ -77,13 +64,5 @@ public class RouterInterface {
 
 	public void setAs(String as) {
 		this.as = as;
-	}
-
-	public double getTotalTrust() {
-		return totalTrust;
-	}
-
-	public void setTotalTrust(double totalTrust) {
-		this.totalTrust = totalTrust;
 	}
 }

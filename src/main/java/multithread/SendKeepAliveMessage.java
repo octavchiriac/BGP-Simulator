@@ -1,6 +1,5 @@
 package multithread;
 
-import components.BGPStates;
 import components.Globals;
 import components.Router;
 import components.RouterInterface;
@@ -18,10 +17,7 @@ public class SendKeepAliveMessage implements Runnable{
     @Override
     public void run() {
         Router r1 = Router.getRouterByIP(this.source);
-        RouterInterface i1 = r1.getRouterInterfaceByIP(this.source);
-
         Router r2 = Router.getRouterByIP(this.destination);
-        RouterInterface i2 = r2.getRouterInterfaceByIP(this.destination);
 
         int seqNumber = 0;
 

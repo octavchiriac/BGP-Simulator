@@ -1,11 +1,8 @@
 package components.tblentries;
 
 import utils.BinaryFunctions;
-import utils.ObjectSizeFetcher;
 
 import java.net.Inet4Address;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class PathAttributes {
 
@@ -23,16 +20,6 @@ public class PathAttributes {
         this.AS_PATH = AS_PATH;
         this.NEXT_HOP = NEXT_HOP;
         this.TRUSTRATE = TRUSTRATE;
-    }
-
-    public PathAttributes(String ORIGIN, PathSegments[] AS_PATH, String NEXT_HOP, String MULTI_EXIT_DISC, String LOCAL_PREF, String ATOMIC_AGGREGATE, String AGGREGATOR) {
-        this.ORIGIN = ORIGIN;
-        this.AS_PATH = AS_PATH;
-        this.NEXT_HOP = NEXT_HOP;
-        this.MULTI_EXIT_DISC = MULTI_EXIT_DISC;
-        this.LOCAL_PREF = LOCAL_PREF;
-        this.ATOMIC_AGGREGATE = ATOMIC_AGGREGATE;
-        this.AGGREGATOR = AGGREGATOR;
     }
 
     @Override
@@ -95,16 +82,8 @@ public class PathAttributes {
 
     public double getTRUSTRATE() { return TRUSTRATE; }
 
-    public void setTRUSTRATE(double TRUSTRATE) {
-        this.TRUSTRATE = TRUSTRATE;
-    }
-
     public String getORIGIN() {
         return ORIGIN;
-    }
-
-    public void setMULTI_EXIT_DISC(String MULTI_EXIT_DISC) {
-        this.MULTI_EXIT_DISC = MULTI_EXIT_DISC;
     }
 
     public String packetToBitArray() {

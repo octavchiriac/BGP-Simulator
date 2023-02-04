@@ -1,13 +1,10 @@
 package packets;
 
 import components.tblentries.PathAttributes;
-import multithread.SendTcpPacket;
+
 import utils.BinaryFunctions;
 import utils.ParserList;
 
-import javax.swing.plaf.synth.SynthTextAreaUI;
-import java.awt.*;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,16 +91,8 @@ public class UpdateMessagePacket extends BgpPacket {
         return bitsArray;
     }
 
-    public long getWithdrawnRoutesLength() {
-        return WithdrawnRoutesLength;
-    }
-
     public List<Map<Integer, String>> getWithdrawnRoutes() {
         return WithdrawnRoutes;
-    }
-
-    public long getTotalPathAttributeLength() {
-        return TotalPathAttributeLength;
     }
 
     public PathAttributes getPathAttributes() {
