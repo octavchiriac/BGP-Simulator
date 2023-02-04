@@ -30,14 +30,20 @@ public class SendTrustListMessage implements Runnable {
         Router r2 = Router.getRouterByIP(this.destination);
         assert r2 != null;
 
-        TrustListMessagePacket packet1 = new TrustListMessagePacket(BGP_VERSION, 0,0,0, this.trustList);
-        String bitArrayBgp1 = packet1.packetToBitArray();
+        try {
+            while (r1.getTcpConnectedRouters().contains(r2)) {
+                TrustListMessagePacket packet1 = new TrustListMessagePacket(BGP_VERSION, 0, 0, 0, this.trustList);
+                String bitArrayBgp1 = packet1.packetToBitArray();
 
-        if (r1.getTcpConnectedRouters().contains(r2)) {
-            SendTcpPacket task1 = new SendTcpPacket(Globals.TCP_PORT, Globals.UDP_PORT, 1, 1,
-                    this.source, this.destination, Globals.DESTINATION_MAC_ADDRESS,
-                    false, true, true, false, bitArrayBgp1);
-            ThreadPool.submit(task1);
+                SendTcpPacket task1 = new SendTcpPacket(Globals.TCP_PORT, Globals.UDP_PORT, 1, 1,
+                        this.source, this.destination, Globals.DESTINATION_MAC_ADDRESS,
+                        false, true, true, false, bitArrayBgp1);
+                ThreadPool.submit(task1);
+
+                Thread.sleep(5000);
+            }
+        } catch (InterruptedException e) {
+            System.err.println(e.getMessage());
         }
     }
 }

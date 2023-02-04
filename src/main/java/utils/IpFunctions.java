@@ -35,10 +35,10 @@ public class IpFunctions {
         return networkAddress.substring(0, networkAddress.length() - 1);
     }
     
-    public static Map<Object, String> reverseMap(Map<String, Object> map) {
-		Map<Object, String> myNewHashMap = new HashMap<>();
+    public static Map<String, String> reverseMap(Map<String, Object> map) {
+		Map<String, String> myNewHashMap = new HashMap<>();
 		for(Map.Entry<String, Object> entry : map.entrySet()){
-		    myNewHashMap.put(entry.getValue(), entry.getKey());
+		    myNewHashMap.put((String) entry.getValue(), entry.getKey());
 		}
 		
 		return myNewHashMap;

@@ -13,8 +13,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import utils.IpFunctions;
 import utils.ParseInputFile;
 
-import static components.Globals.linkMap;
-import static components.Globals.routers;
+import static components.Globals.*;
 import static components.Router.getRouterByIP;
 
 public class DoTest {
@@ -297,7 +296,55 @@ public class DoTest {
             ThreadPool.submit(task);
         });
 
-        Thread.sleep(25000);
+        // Select router to change state
+        Thread.sleep(2000);
+        Router shutdownRouter = changeRouterStateFromInput();
+
+        fullMap.entrySet().parallelStream().forEach(entry -> {
+            if (shutdownRouter.getEnabledInterfacesAddresses().contains(entry.getKey())) {
+                SendNotificationMessage task1 =
+                        new SendNotificationMessage(entry.getKey(), (String) entry.getValue());
+                ThreadPool.submit(task1);
+            }
+        });
+
+        // Select router to change state
+        Router restartedRouter = changeRouterStateFromInput();
+
+        if (restartedRouter != null) {
+            // Restart router thread
+            Thread t = new Thread(restartedRouter);
+            t.start();
+
+            Thread.sleep(1000);
+
+            // Send RST message to previously connected routers
+            fullMap.entrySet().parallelStream().forEach(entry -> {
+                if (restartedRouter.getEnabledInterfacesAddresses().contains(entry.getKey())) {
+                    SendTcpPacket task1 = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0,
+                            entry.getKey(), (String) entry.getValue(), Globals.DESTINATION_MAC_ADDRESS,
+                            false, false, false, true, "");
+                    ThreadPool.submit(task1);
+
+                    try {
+                        // Resend OPEN message to previously connected routers
+                        Thread.sleep(7000);
+                        SendOpenMessage task2 = new SendOpenMessage(entry.getKey(), (String) entry.getValue());
+                        ThreadPool.submit(task2);
+
+                        // Resend KEEPALIVE message to previously connected routers
+                        Thread.sleep(3000);
+                        SendKeepAliveMessage task3 = new SendKeepAliveMessage(entry.getKey(), (String) entry.getValue());
+                        ThreadPool.submit(task3);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                }
+            });
+        }
+
+        Thread.sleep(30000);
 
         // Send update messages to neighbors
         AtomicInteger counter = new AtomicInteger();
@@ -312,14 +359,19 @@ public class DoTest {
             }
         });
 
+        // Customize routing table
         Thread.sleep(15000);
+        Router changedRouter = customizeRoutingTable();
+
+        // Print customized routing table
+        Thread.sleep(15000);
+        changedRouter.printRoutingTable();
 
         // Calculate direct trust between routers and exchange
-        linkMap.entrySet().parallelStream().forEach(entry -> {
+        fullMap.entrySet().parallelStream().forEach(entry -> {
             double votingCoefficient = 0;
             double directTrust = 0;
             double totalTrust;
-            Router r1 = Router.getRouterByIP(entry.getKey());
             Router r2 = Router.getRouterByIP((String) entry.getValue());
 
             NeighborTable tmpNeighborTable = r2.getNeighborTable();
@@ -348,7 +400,7 @@ public class DoTest {
         Thread.sleep(10000);
 
         // Exchange trust information between neighbors using WithdrawnRoutes parameter
-        linkMap.entrySet().parallelStream().forEach(entry -> {
+        fullMap.entrySet().parallelStream().forEach(entry -> {
             Router r1 = Router.getRouterByIP(entry.getKey());
             Map<Integer, String> trustMap = new HashMap<>();
 
@@ -365,68 +417,5 @@ public class DoTest {
             SendTrustListMessage task = new SendTrustListMessage(entry.getKey(), (String) entry.getValue(), trustMap);
             ThreadPool.submit(task);
         });
-
-
-        // BLOCK CUSTOMIZE TABLE
-//        Thread.sleep(15000);
-//
-//        Router changedRouter = customizeRoutingTable();
-//
-//        Thread.sleep(15000);
-//        changedRouter.printRoutingTable();
-
-
-        //BLOCK CHANGE ROUTER STATE
-//    // Select router to change state
-//    Thread.sleep(2000);
-//    Router shutdownRouter = changeRouterStateFromInput();
-//
-//    linkMap.entrySet().parallelStream().forEach(entry -> {
-//        if (shutdownRouter.getEnabledInterfacesAddresses().contains(entry.getKey())) {
-//            SendNotificationMessage task1 =
-//                    new SendNotificationMessage(entry.getKey(), (String) entry.getValue());
-//            ThreadPool.submit(task1);
-//        }
-//    });
-//
-//    // Select router to change state
-//    Router restartedRouter = changeRouterStateFromInput();
-//
-//
-//    if (restartedRouter != null) {
-//        // Restart router thread
-//        Thread t = new Thread(restartedRouter);
-//        t.start();
-//
-//        Thread.sleep(1000);
-//
-//        // Send RST message to previously connected routers
-//        linkMap.entrySet().parallelStream().forEach(entry -> {
-//            if (restartedRouter.getEnabledInterfacesAddresses().contains(entry.getKey())) {
-//                SendTcpPacket task1 = new SendTcpPacket(Globals.UDP_PORT, Globals.TCP_PORT, 0, 0,
-//                        entry.getKey(), (String) entry.getValue(), Globals.DESTINATION_MAC_ADDRESS,
-//                        false, false, false, true, "");
-//                ThreadPool.submit(task1);
-//
-//                try {
-//                    // Resend OPEN message to previously connected routers
-//                    Thread.sleep(7000);
-//                    SendOpenMessage task2 = new SendOpenMessage(entry.getKey(), (String) entry.getValue());
-//                    ThreadPool.submit(task2);
-//
-//                    // Resend KEEPALIVE message to previously connected routers
-//                    Thread.sleep(3000);
-//                    SendKeepAliveMessage task3 = new SendKeepAliveMessage(entry.getKey(), (String) entry.getValue());
-//                    ThreadPool.submit(task3);
-//                } catch (InterruptedException e) {
-//                    throw new RuntimeException(e);
-//                }
-//
-//            }
-//        });
-//    }
-
-
-//        ThreadPool.stop();
     }
 }
